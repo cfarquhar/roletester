@@ -66,6 +66,16 @@ class KeystoneManager(object):
 
         return ClientManager(**env_vars)
 
+    def get_random_string(self, length):
+        """
+        Generates really nice random strings
+        :param length: random string length
+        :type length: int
+        :returns: string
+        """
+        return ''.join(
+            [Random.random.choice(ascii_letters + digits)
+            for x in range(length)]
 
     def _get_cypher(self):
         """
@@ -82,7 +92,7 @@ class KeystoneManager(object):
             iv = self.__crypto_info['iv']
         return (AES.new(key, AES.MODE_CFB, iv), iv)
 
-    def find_user_credentials(self, domain='', project='Default', role='member'):
+    def find_user_credentials(self, domain='default', project='default', role='member'):
         """
         Finds a user that matches your auth needs, creating one if necessary.
         
@@ -100,9 +110,45 @@ class KeystoneManager(object):
         if hash in self.__users.keys():
             return self.__users[hash]
         else:
+            str_suffix = self.get_random_string(6)
+            domain_resource = self._ensure_keystone_resource(
+                "domain", 
+                "test-domain-%s" % str_suffix)
+            project_resource = self._ensure_keystone_resource(
+                "project", 
+                "test-project-%s" % str_suffix, 
+                domain)
+            user_resource = self._ensure_keystone_resource(
+                "user", 
+                "test-user-%s" % str_suffix, 
+                domain, 
+                project)
+            role_resource = self._ensure_keystone_resource(
+                "role", 
+                "test-role-%s" % str_suffix)
             self.__users[hash] = self.admin_client_manager
-            #TODO: Make this return real users
+            #TODO: Make this return real user name
             return self.__users[hash]
+            
+    def get_resource_by_name(name, resource_type):
+        """
+        Returns a keystone resource by name.
+        
+        Assumes names are unique, or at very least will just 
+        return the first matching entity.
+        :param name: name of the object to find
+        :type name: string
+        :param resource_type: name of object type
+        :type resource_type: string
+        :returns: keystoneclient.base.Resource
+        """
+        collection = [x 
+            for x in ks_attr(resource_type).list() 
+            if x.name == name]
+        if collection == []:
+            return None
+        else:
+            return collection[0]
             
 
     def _encode_hash(self, *args):
@@ -172,26 +218,6 @@ class KeystoneManager(object):
         """
         entity_exists = lambda name: name in [x.name for x in resources.list()]
 
-        def get_entity_by_name(name, resource_type):
-            """
-            Simply returns a keystone entity by name.
-            
-            Assumes names are unique, or at very least will just 
-            return the first matching entity. Also assumes the name exists.
-            :param name: name of the object to find
-            :type name: string
-            :param resource_type: name of object type
-            :type resource_type: string
-            :returns: keystoneclient.base.Resource
-            """
-            collection = [x 
-                for x in ks_attr(resource_type).list() 
-                if x.name == name]
-            if collection == []:
-                return None
-            else:
-                return collection[0]
-
         def build_args(xs, ys, trailing={}, all={}):
             """
             Compiles a struct of args passed into keystone clients
@@ -216,8 +242,8 @@ class KeystoneManager(object):
         
         xs = ['domain', 'project', 'user']
         ys = [name, 
-            get_entity_by_name(domain_name, 'domain'), 
-            get_entity_by_name(project_name, 'project')]
+            self.get_resource_by_name(domain_name, 'domain'), 
+            self.get_resource_by_name(project_name, 'project')]
         all_args = build_args(xs, ys)
         
 
@@ -225,13 +251,17 @@ class KeystoneManager(object):
             my_args = all_args[keystone_resource_type]
             if keystone_resource_type == 'user':
                 # Password field is conveniently last in *args position
-                my_args.append(''
+                password = ''
                     .join(
-                        [Random.random.choice(ascii_letters + digits) 
+                        [Random.random.choice(ascii_letters + digits)
                     for x in range(32)]
-                    )
-                )
-            return resources.create(*my_args)
+                my_args.append(password)
+                # Hijack the user, add password so we can slurp it on return
+                user = resources.create(*my_args)
+                user.password = self.get_random_string(32)
+                return user
+            else:
+                return resources.create(*my_args)
         else:
             return [resources.get(x.id) 
                 for x in resources.list() 
