@@ -5,6 +5,63 @@ from roletester.log import logging
 logger = logging.getLogger('roletester.actions.nova.server')
 
 
+def create(clients, context, name, flavor, image):
+    """Creates server with random image and flavor.
+
+    Sets context['server_id']
+
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param name: Server name
+    :type name : String
+    :param flavor: Flavor id
+    :type flavor: Integer
+    :param image: Image id
+    :type image: String
+    """
+    logger.info("Taking action create")
+    nova = clients.get_nova()
+    flavor = nova.flavors.get(flavor)
+    server = nova.servers.create(name, image, flavor)
+    context.update({'server_id': server.id})
+    logger.info("Created server {}".format(name))
+
+
+def delete(clients, context):
+    """Deletes random server.
+
+    Uses context['server_id']
+
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    """
+    logger.info("Taking action delete")
+    nova = clients.get_nova()
+    server_id = context['server_id']
+    logger.info("Deleting {0} ...".format(server_id))
+    nova.servers.delete(server_id)
+
+
+def list(clients, context):
+    """Lists nova servers.
+
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by referece object
+    :type context: Dict
+    """
+    logger.info("Listing active servers")
+    nova = clients.get_nova()
+    servers = nova.servers.list()
+    for s in servers:
+        logger.info("{0} - {1} - {2}".format(s.name, s.metadata, s.status))
+
+
+
 def show(clients, context):
     """Shows a nova server.
 
