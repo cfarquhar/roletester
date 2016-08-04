@@ -1,10 +1,12 @@
+import os
 from keystoneauth1 import loading
 from keystoneauth1 import session
+from keystoneauth1.identity import v3
 from cinderclient import client as cinderclient
 from novaclient import client as novaclient
 from glanceclient import Client as glanceclient
+from keystoneclient import client as keystoneclient
 from neutronclient.v2_0 import client as neutronclient
-
 
 class ClientManager(object):
     """Object that manages multiple openstack clients.
@@ -24,6 +26,7 @@ class ClientManager(object):
         self.nova = None
         self.glance = None
         self.cinder = None
+        self.keystone = None
         self.auth_kwargs = auth_kwargs
 
     def get_session(self):
@@ -32,8 +35,9 @@ class ClientManager(object):
         :returns: keystoneauth1.session.Session
         """
         if self.session is None:
-            loader = loading.get_plugin_loader('password')
-            auth = loader.load_from_options(**self.auth_kwargs)
+            #loader = loading.get_plugin_loader('password')
+            #auth = loader.load_from_options(**self.auth_kwargs)
+            auth = v3.Password(**self.auth_kwargs)
             self.session = session.Session(auth=auth)
         return self.session
 
@@ -77,3 +81,17 @@ class ClientManager(object):
             self.cinder = cinderclient.Client(version,
                                               session=self.get_session())
         return self.cinder
+        
+    def get_keystone(self, version='3'):
+        """Get a keystone client instance.
+
+        :param version: String api version
+        :return: keystoneClient.Client
+        """
+        if self.keystone is None:
+            iface = os.getenv('OS_ENDPOINT_TYPE', "public")
+            self.keystone = keystoneclient.Client(
+                version=version, 
+                session=self.get_session(), 
+                interface=iface)
+        return self.keystone
