@@ -4,6 +4,7 @@ import config
 from log import logging
 import time
 import utils
+import keystone_generator
 
 from clients import ClientManager
 from actions.nova import delete as server_delete
