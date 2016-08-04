@@ -1,5 +1,6 @@
 from keystoneauth1 import loading
 from keystoneauth1 import session
+from keystoneauth1.identity import v3
 from cinderclient import client as cinderclient
 from novaclient import client as novaclient
 from glanceclient import Client as glanceclient
@@ -32,8 +33,9 @@ class ClientManager(object):
         :returns: keystoneauth1.session.Session
         """
         if self.session is None:
-            loader = loading.get_plugin_loader('password')
-            auth = loader.load_from_options(**self.auth_kwargs)
+            #loader = loading.get_plugin_loader('password')
+            #auth = loader.load_from_options(**self.auth_kwargs)
+            auth = v3.Password(**self.auth_kwargs)
             self.session = session.Session(auth=auth)
         return self.session
 
