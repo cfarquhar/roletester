@@ -16,7 +16,7 @@ logger = logging.getLogger('roletester')
 
 from exc import NovaNotFound
 
-
+km = KeystoneManager()
 admin_kwargs = {
     'auth_url': 'someurl',
     'username': 'someusername',
@@ -25,7 +25,7 @@ admin_kwargs = {
     'user_domain_name': 'Default',
     'project_domain_name': 'Default'
 }
-admin_clients = ClientManager(**admin_kwargs)
+admin_clients = km.find_user_credentials('Default', 'admin', 'admin')
 
 
 demo_kwargs = {
@@ -36,7 +36,7 @@ demo_kwargs = {
     'user_domain_name': 'demodomain',
     'project_domain_name': 'demodeomain'
 }
-demo_clients = ClientManager(**demo_kwargs)
+demo_clients = km.find_user_credentials('Default', 'demo', 'member')
 
 
 # Create then delete
