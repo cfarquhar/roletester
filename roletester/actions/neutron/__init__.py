@@ -3,6 +3,11 @@ from network import delete as network_delete
 from network import show as network_show
 from network import update as network_update
 
+from port import create as port_create
+from port import delete as port_delete
+from port import show as port_show
+from port import update as port_update
+
 from security_group import add_to_server as security_group_add_to_server
 from security_group import create as security_group_create
 from security_group import delete as security_group_delete
@@ -23,6 +28,11 @@ __all__ = [
     'network_delete',
     'network_show',
     'network_update',
+
+    'port_create_for_server',
+    'port_delete',
+    'port_show',
+    'port_update',
 
     'security_group_add_to_server',
     'security_group_create',
