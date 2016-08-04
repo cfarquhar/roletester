@@ -43,12 +43,14 @@ class KeystoneManager(object):
         """
         These credentials are so that we can create anything we 
         need to in keystone. They must be admin level credentials.
-        """
-        self.admin_client_manager = self.load_admin_client_manager()
         
-    def load_admin_client_manager(self):
+        It is assumed you are getting these from ENV.
         """
-        Loads admin credentials from ENV variables
+        self.admin_client_manager = self.load_client_manager()
+        
+    def load_client_manager(self, **kwargs):
+        """
+        Loads admin credentials from either ENV variables or kwargs
         
         :returns: client.ClientManager
         """
@@ -110,24 +112,23 @@ class KeystoneManager(object):
         if hash in self.__users.keys():
             return self.__users[hash]
         else:
-            str_suffix = self.get_random_string(6)
             domain_resource = self._ensure_keystone_resource(
                 "domain", 
-                "test-domain-%s" % str_suffix)
+                domain)
             project_resource = self._ensure_keystone_resource(
                 "project", 
-                "test-project-%s" % str_suffix, 
+                project, 
                 domain)
             user_resource = self._ensure_keystone_resource(
                 "user", 
-                "test-user-%s" % str_suffix, 
+                "test-user-%s" % self.get_random_string(6), 
                 domain, 
                 project)
             role_resource = self._ensure_keystone_resource(
                 "role", 
-                "test-role-%s" % str_suffix)
+                role)
             self.__users[hash] = self.admin_client_manager
-            #TODO: Make this return real user name
+            #TODO: Make this return real user.
             return self.__users[hash]
             
     def get_resource_by_name(name, resource_type):
@@ -218,51 +219,43 @@ class KeystoneManager(object):
         """
         entity_exists = lambda name: name in [x.name for x in resources.list()]
 
-        def build_args(xs, ys, trailing={}, all={}):
-            """
-            Compiles a struct of args passed into keystone clients
-            
-            Each keystone type takes the parent types as options
-            to create(). Thus user has one more options than project,
-            and project one more than domain.
-            
-            :param xs: keystone entities to be searched.
-            :type xs: ['domain', 'project', 'user]
-            :param ys: the args from this function. Order is key.
-            :type ys: [string]
-            :returns: dict
-            """
-            if xs == []:
-                return all
-            else:
-                all[xs[-1]] = ys
-                return build_args(xs[:-1], ys[:-1], trailing, all)
-                
-        resources = ks_attr(keystone_resource_type) #clarity
+        """
+        these become the *args that are sent to create() methods in keystone.
+        """
+        all_args = {
+            "role": [name],
+            "domain": [name],
+            "project": all_args["domain"] +
+                [self.get_resource_by_name(domain_name, 'domain')],
+            "user": all_args["project"] + 
+            [self.get_resource_by_name(project_name, 'project')]
+        }
         
-        xs = ['domain', 'project', 'user']
-        ys = [name, 
-            self.get_resource_by_name(domain_name, 'domain'), 
-            self.get_resource_by_name(project_name, 'project')]
-        all_args = build_args(xs, ys)
-        
-
         if entity_exists(name) == False:
+            """
+            create the resource!
+            """
             my_args = all_args[keystone_resource_type]
             if keystone_resource_type == 'user':
-                # Password field is conveniently last in *args position
-                password = ''
-                    .join(
-                        [Random.random.choice(ascii_letters + digits)
-                    for x in range(32)]
+                """
+                User has an extra field (password) that needs to be tagged on.
+                Conveniently, it is stored last in *args position
+                """
+                password = self.get_random_string(32)
                 my_args.append(password)
                 # Hijack the user, add password so we can slurp it on return
                 user = resources.create(*my_args)
-                user.password = self.get_random_string(32)
+                user.password = password
                 return user
             else:
+                """
+                non-user objects are all standard
+                """
                 return resources.create(*my_args)
         else:
+            """
+            load the resource
+            """
             return [resources.get(x.id) 
                 for x in resources.list() 
                 if x.name == name][0]
