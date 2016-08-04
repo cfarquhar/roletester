@@ -3,6 +3,7 @@ import types
 import binascii
 from Crypto.Cipher import AES
 from Crypto import Random
+from Crypto.Random import random
 from clients import ClientManager
 from string import ascii_letters, digits
 
@@ -44,15 +45,6 @@ class KeystoneManager(object):
         These credentials are so that we can create anything we 
         need to in keystone. They must be admin level credentials.
         
-        It is assumed you are getting these from ENV.
-        """
-        self.admin_client_manager = self.load_client_manager()
-        
-    def load_client_manager(self, **kwargs):
-        """
-        Loads admin credentials from either ENV variables or kwargs
-        
-        :returns: client.ClientManager
         """
         env_vars_default = {
             'OS_USERNAME': 'admin', 
@@ -61,12 +53,19 @@ class KeystoneManager(object):
             'OS_AUTH_URL': 'http://127.0.0.1:5000/v3', 
             'OS_USER_DOMAIN_NAME': 'Default', 
             'OS_PROJECT_DOMAIN_NAME': 'Default'}
-        env_vars = {
+        self.env_vars = {
             k[3:].lower(): os.getenv(k, v) 
             for (k,v) in env_vars_default.items()
         }
-
-        return ClientManager(**env_vars)
+        
+        self.admin_client_manager = ClientManager(**self.env_vars)
+        
+        """
+        Used a few places to get keystone objects by string
+        """
+        self.ks_attr = lambda t: getattr(
+            self.admin_client_manager.get_keystone(), "%ss" % t)
+        
 
     def get_random_string(self, length):
         """
@@ -76,9 +75,9 @@ class KeystoneManager(object):
         :returns: string
         """
         return ''.join(
-            [Random.random.choice(ascii_letters + digits)
-            for x in range(length)]
-
+            [random.choice(ascii_letters + digits)
+            for x in range(length)])
+            
     def _get_cypher(self):
         """
         Builds a cypher for encryption/decryption
@@ -125,13 +124,35 @@ class KeystoneManager(object):
                 domain, 
                 project)
             role_resource = self._ensure_keystone_resource(
-                "role", 
+                "role",
                 role)
-            self.__users[hash] = self.admin_client_manager
-            #TODO: Make this return real user.
+
+            ks = self.admin_client_manager.get_keystone()
+            # TODO: figure out why this doesnt work
+            # Getting keystoneclient.exceptions.MethodNotImplemented: 
+            # Create not supported for role assignments.
+            #
+            # This is infinitely annoying
+            ks.role_assignments.create(
+                **{"user": user_resource, 
+                "domain": domain_resource, 
+                "project": project_resource, 
+                "role": role_resource})
+                
+            user_kwargs = {
+                'username': user_resource.name,
+                'password': user_resource.password,
+                'project_name': project_resource.name,
+                'auth_url': self.env_vars['auth_url'],
+                'user_domain_name': domain_resource.name,
+                'project_domain_name': domain_resource.name
+            }
+            #TODO: Make this is actually working.
+            print user_kwargs
+            self.__users[hash] = ClientManager(**user_kwargs)
             return self.__users[hash]
             
-    def get_resource_by_name(name, resource_type):
+    def get_resource_by_name(self, name, resource_type):
         """
         Returns a keystone resource by name.
         
@@ -143,8 +164,11 @@ class KeystoneManager(object):
         :type resource_type: string
         :returns: keystoneclient.base.Resource
         """
+        if name == None: # None specified by user
+            return None
+        ks = self.admin_client_manager.get_keystone()
         collection = [x 
-            for x in ks_attr(resource_type).list() 
+            for x in self.ks_attr(resource_type).list() 
             if x.name == name]
         if collection == []:
             return None
@@ -203,15 +227,8 @@ class KeystoneManager(object):
         
         ks = self.admin_client_manager.get_keystone() # used like, everywhere
         
-        """
-        keystone clients are all plural, like `domains` and `users`.
-        """
-        pluralize = lambda n: "%ss" % n
-
-        """
-        quick conversion from a string to the keystone type it represents.
-        """
-        ks_attr = lambda t: getattr(ks, pluralize(t))
+        # clarity
+        resources = self.ks_attr(keystone_resource_type)
         
         """
         check whether a keystone object exists in its list by name.
@@ -225,10 +242,15 @@ class KeystoneManager(object):
         all_args = {
             "role": [name],
             "domain": [name],
-            "project": all_args["domain"] +
-                [self.get_resource_by_name(domain_name, 'domain')],
-            "user": all_args["project"] + 
-            [self.get_resource_by_name(project_name, 'project')]
+            "project": [
+                name,
+                self.get_resource_by_name(domain_name, 'domain')],
+            "user": [
+                name,
+                self.get_resource_by_name(domain_name, 'domain'),
+                self.get_resource_by_name(project_name, 'project')
+            ]
+            
         }
         
         if entity_exists(name) == False:
