@@ -4,6 +4,7 @@ import binascii
 from Crypto.Cipher import AES
 from Crypto import Random
 from clients import ClientManager
+from string import ascii_letters, digits
 
 
 class KeystoneManager(object):
@@ -144,7 +145,7 @@ class KeystoneManager(object):
         ks = self.admin_client_manager.get_keystone()
         return name in [x.name for x in getattr(ks, keystone_type).list()]
         
-    def ensure_keystone_resource(self, keystone_resource_type, name, domain_name=None, project_name=None):
+    def _ensure_keystone_resource(self, keystone_resource_type, name, domain_name=None, project_name=None):
         """
         Gets (or creates and returns) a keystone domain by name.
         
@@ -222,6 +223,14 @@ class KeystoneManager(object):
 
         if entity_exists(name) == False:
             my_args = all_args[keystone_resource_type]
+            if keystone_resource_type == 'user':
+                # Password field is conveniently last in *args position
+                my_args.append(''
+                    .join(
+                        [Random.random.choice(ascii_letters + digits) 
+                    for x in range(32)]
+                    )
+                )
             return resources.create(*my_args)
         else:
             return [resources.get(x.id) 
