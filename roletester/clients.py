@@ -77,5 +77,6 @@ class ClientManager(object):
         :return: keystoneClient.Client
         """
         if self.keystone is None:
+            print self.auth_kwargs
             self.keystone = keystoneclient.Client(version=version, session=self.get_session())
         return self.keystone

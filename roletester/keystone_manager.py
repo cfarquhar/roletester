@@ -49,6 +49,7 @@ class KeystoneManager(object):
         env_vars_default = {
             'OS_USERNAME': 'admin', 
             'OS_PASSWORD': '', 
+            'OS_ENDPOINT_TYPE': 'public',
             'OS_PROJECT_NAME': 'admin', 
             'OS_AUTH_URL': 'http://127.0.0.1:5000/v3', 
             'OS_USER_DOMAIN_NAME': 'Default', 
