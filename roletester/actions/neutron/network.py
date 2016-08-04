@@ -95,6 +95,4 @@ def update(clients, context, name=None, admin_state_up=None):
         body['network']['name'] = name
     if admin_state_up is not None:
         body['network']['admin_state_up'] = admin_state_up
-    resp = neutron.update_network(network_id, body=body)
-    network = resp['network']
-    context['updated_network'] = network
+    neutron.update_network(network_id, body=body)

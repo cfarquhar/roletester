@@ -13,6 +13,11 @@ from security_group import update as security_group_update
 from security_group_rule import create as security_group_rule_create
 from security_group_rule import delete as security_group_rule_delete
 
+from subnet import create as subnet_create
+from subnet import delete as subnet_delete
+from subnet import show as subnet_show
+from subnet import update as subnet_update
+
 __all__ = [
     'network_create',
     'network_delete',
@@ -27,5 +32,10 @@ __all__ = [
     'security_group_update',
 
     'security_group_rule_create',
-    'security_group_rule_delete'
+    'security_group_rule_delete',
+
+    'subnet_create',
+    'subnet_delete',
+    'subnet_show',
+    'subnet_update'
 ]

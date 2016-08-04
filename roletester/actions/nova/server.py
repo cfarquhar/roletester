@@ -61,7 +61,6 @@ def list(clients, context):
         logger.info("{0} - {1} - {2}".format(s.name, s.metadata, s.status))
 
 
-
 def show(clients, context):
     """Shows a nova server.
 
