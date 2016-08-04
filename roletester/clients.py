@@ -70,7 +70,7 @@ class ClientManager(object):
                                               session=self.get_session())
         return self.cinder
         
-    def get_keystone(self, version='2'):
+    def get_keystone(self, version='3'):
         """Get a keystone client instance.
 
         :param version: String api version
