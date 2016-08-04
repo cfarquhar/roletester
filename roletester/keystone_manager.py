@@ -176,16 +176,20 @@ class KeystoneManager(object):
             Simply returns a keystone entity by name.
             
             Assumes names are unique, or at very least will just 
-            return the first matching entity.
+            return the first matching entity. Also assumes the name exists.
             :param name: name of the object to find
             :type name: string
             :param resource_type: name of object type
             :type resource_type: string
             :returns: keystoneclient.base.Resource
             """
-            return [x 
+            collection = [x 
                 for x in ks_attr(resource_type).list() 
-                if x.name == name][0]
+                if x.name == name]
+            if collection == []:
+                return None
+            else:
+                return collection[0]
 
         def build_args(xs, ys, trailing={}, all={}):
             """
