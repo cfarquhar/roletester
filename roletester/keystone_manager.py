@@ -130,7 +130,69 @@ class KeystoneManager(object):
         """
         (cipher, iv) = self._get_cypher()
         return cipher.decrypt(hash.decode('hex'))[len(iv):].split('|')
-    
+        
+    def _entity_exists(self, keystone_type, name):
+        """
+        Checks to see if keystone has a matching record.
+        
+        :param keystone_type: Keystone resource "project" || "domain" || "role"
+        :type keystone_type: string
+        :param name: matching name, like `member` for a role
+        :type name: string
+        :returns: boolean
+        """
+        ks = self.admin_client_manager.get_keystone()
+        return name in [x.name for x in getattr(ks, keystone_type).list()]
+        
+    def get_keystone_resource(self, keystone_resource_type, name, domain_name=None, project_name=None):
+        """
+        Gets (or creates and returns) a keystone domain by name.
+        
+        :param name: Keystone domain name
+        :type name: string
+        :returns: keystoneclient.v3.domains.Domain
+        """
 
+        def build_args(xs, ys, all={}):
+            """
+            Compiles a struct of args passed into keystone clients
+            
+            Each keystone type takes the parent types as options
+            to create(). Thus user has one more options than project,
+            and project one more than domain.
+            
+            :param xs: keystone entities to be searched.
+            :type xs: ['domain', 'project', 'user]
+            :param ys: the args from this function. Order is key.
+            :type ys: [string]
+            :returns: dict
+            """
+            if xs == []:
+                return all
+            else:
+                all[xs[-1]] = ys
+                return build_args_list(xs[:-1], ys[:-1], all)
+                
+        desc = "testing %s" % keystone_resource_type
+        xs = ['domain', 'project', 'user']
+        ys = [name, desc, domain_name, project_name]
+        all_args = build_args(xs, ys)
+        
+        ks = self.admin_client_manager.get_keystone()
+        
 
+        """
+        keystone clients are all plural, like `domains` and `users`.
+        """
+        resources = getattr(ks, "%ss" % keystone_resource_type)
+
+        entity_exists = lambda name: name in [x.name for x in resources.list()]
+
+        if entity_exists(name) == False:
+            my_args = all_args[keystone_resource_type]
+            return resources.create(*my_args)
+        else:
+            return [resources.get(x.id) 
+                for x in resources.list() 
+                if x.name == name][0]
 
