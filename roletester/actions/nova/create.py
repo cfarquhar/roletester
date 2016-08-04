@@ -1,5 +1,3 @@
-"""Module containing action to create a nova server."""
-from roletester import utils
 from roletester.log import logging
 
 logger = logging.getLogger('roletester.actions.nova.create')

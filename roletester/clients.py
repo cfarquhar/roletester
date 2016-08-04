@@ -3,6 +3,7 @@ from keystoneauth1 import session
 from cinderclient import client as cinderclient
 from novaclient import client as novaclient
 from glanceclient import Client as glanceclient
+from neutronclient.v2_0 import client as neutronclient
 
 
 class ClientManager(object):
@@ -19,6 +20,7 @@ class ClientManager(object):
         :param project_id: String project_id - Tenant uuid
         """
         self.session = None
+        self.neutron = None
         self.nova = None
         self.glance = None
         self.cinder = None
@@ -44,6 +46,16 @@ class ClientManager(object):
         if self.nova is None:
             self.nova = novaclient.Client(version, session=self.get_session())
         return self.nova
+
+    def get_neutron(self, version='2'):
+        """Get a neutron client instance.
+
+        :param version: String api version
+        :returns: neutronclient.v2_0.client.Client
+        """
+        if self.neutron is None:
+            self.neutron = neutronclient.Client(session=self.get_session())
+        return self.neutron
 
     def get_glance(self, version='2'):
         """Get a glance client instance.
