@@ -4,7 +4,7 @@ from cinderclient import client as cinderclient
 from novaclient import client as novaclient
 from glanceclient import Client as glanceclient
 from neutronclient.v2_0 import client as neutronclient
-
+from swiftclient import client as swiftclient
 
 class ClientManager(object):
     """Object that manages multiple openstack clients.
@@ -24,6 +24,7 @@ class ClientManager(object):
         self.nova = None
         self.glance = None
         self.cinder = None
+	self.swift = None
         self.auth_kwargs = auth_kwargs
 
     def get_session(self):
@@ -77,3 +78,16 @@ class ClientManager(object):
             self.cinder = cinderclient.Client(version,
                                               session=self.get_session())
         return self.cinder
+
+    def get_swift(self):
+        """Get a swift client.Connection instance.
+
+        :return: swiftclient.client.Connection
+        """
+        if self.swift is None:
+            self.swift = swiftclient.Connection(auth_version='3',
+						authurl=self.auth_kwargs["auth_url"],
+						user=self.auth_kwargs["username"],
+						key=self.auth_kwargs["password"],
+						tenant_name=self.auth_kwargs["project_id"])
+        return self.swift
