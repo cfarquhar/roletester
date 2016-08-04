@@ -90,5 +90,8 @@ class ClientManager(object):
         """
         if self.keystone is None:
             iface = os.getenv('OS_ENDPOINT_TYPE', "public")
-            self.keystone = keystoneclient.Client(version=version, session=self.get_session(), interface=iface)
+            self.keystone = keystoneclient.Client(
+                version=version, 
+                session=self.get_session(), 
+                interface=iface)
         return self.keystone

@@ -40,7 +40,6 @@ class KeystoneManager(object):
         is a credentials object.
         """
         self.__users = {}
-
         """
         These credentials are so that we can create anything we 
         need to in keystone. They must be admin level credentials.
@@ -65,8 +64,19 @@ class KeystoneManager(object):
         """
         self.ks_attr = lambda t: getattr(
             self.admin_client_manager.get_keystone(), "%ss" % t)
+            
+    def teardown(self):
+        """
+        Need to ensure all users created during this are destroyed.
+        """
+        for u in self.__users.values():
+            ks = self.admin_client_manager.get_keystone()
+            username = u.auth_kwargs['username']
+            usr_test = [x for x in ks.users.list() if x.name==username]
+            if usr_test != []:
+                usr = usr_test[0]
+                ks.users.delete(usr)
         
-
     def get_random_string(self, length):
         """
         Generates really nice random strings
@@ -93,7 +103,10 @@ class KeystoneManager(object):
             iv = self.__crypto_info['iv']
         return (AES.new(key, AES.MODE_CFB, iv), iv)
 
-    def find_user_credentials(self, domain='default', project='default', role='member'):
+    def find_user_credentials(self, 
+        domain='default', 
+        project='default', 
+        role='member'):
         """
         Finds a user that matches your auth needs, creating one if necessary.
         
@@ -146,7 +159,11 @@ class KeystoneManager(object):
             self.__users[hash] = ClientManager(**user_kwargs)
             return self.__users[hash]
     
-    def create_role_assignments(self, role=None, user=None, domain=None, project=None):
+    def create_role_assignments(self, 
+        role=None, 
+        user=None, 
+        domain=None, 
+        project=None):
         """
         Make role assignments from a list of keystone resources
         
@@ -251,7 +268,11 @@ class KeystoneManager(object):
         ks = self.admin_client_manager.get_keystone()
         return name in [x.name for x in getattr(ks, keystone_type).list()]
         
-    def _ensure_keystone_resource(self, keystone_resource_type, name, domain_name=None, project_name=None):
+    def _ensure_keystone_resource(self, 
+        keystone_resource_type, 
+        name, 
+        domain_name=None, 
+        project_name=None):
         """
         Gets (or creates and returns) a keystone domain by name.
         
