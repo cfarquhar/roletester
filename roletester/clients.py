@@ -1,3 +1,4 @@
+import os
 from keystoneauth1 import loading
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
@@ -77,6 +78,6 @@ class ClientManager(object):
         :return: keystoneClient.Client
         """
         if self.keystone is None:
-            print self.auth_kwargs
-            self.keystone = keystoneclient.Client(version=version, session=self.get_session())
+            iface = os.getenv('OS_ENDPOINT_TYPE', "public")
+            self.keystone = keystoneclient.Client(version=version, session=self.get_session(), interface=iface)
         return self.keystone

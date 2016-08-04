@@ -49,7 +49,6 @@ class KeystoneManager(object):
         env_vars_default = {
             'OS_USERNAME': 'admin', 
             'OS_PASSWORD': '', 
-            'OS_ENDPOINT_TYPE': 'public',
             'OS_PROJECT_NAME': 'admin', 
             'OS_AUTH_URL': 'http://127.0.0.1:5000/v3', 
             'OS_USER_DOMAIN_NAME': 'Default', 
@@ -127,19 +126,15 @@ class KeystoneManager(object):
             role_resource = self._ensure_keystone_resource(
                 "role",
                 role)
-
-            ks = self.admin_client_manager.get_keystone()
-            # TODO: figure out why this doesnt work
-            # Getting keystoneclient.exceptions.MethodNotImplemented: 
-            # Create not supported for role assignments.
-            #
-            # This is infinitely annoying
-            ks.role_assignments.create(
-                **{"user": user_resource, 
-                "domain": domain_resource, 
-                "project": project_resource, 
-                "role": role_resource})
-                
+            role_requirement_resources = self.create_role_assignments(
+                role_resource,
+                user_resource,
+                domain_resource,
+                project_resource
+            )
+            """
+            Finally build or fetch the user's client manager.
+            """
             user_kwargs = {
                 'username': user_resource.name,
                 'password': user_resource.password,
@@ -148,14 +143,53 @@ class KeystoneManager(object):
                 'user_domain_name': domain_resource.name,
                 'project_domain_name': domain_resource.name
             }
-            #TODO: Make this is actually working.
-            print user_kwargs
             self.__users[hash] = ClientManager(**user_kwargs)
             return self.__users[hash]
-            
+    
+    def create_role_assignments(self, role=None, user=None, domain=None, project=None):
+        """
+        Make role assignments from a list of keystone resources
+        
+        :param role: The role to be assigned. This is required.
+        :type role: keystoneclient.v3.roles.Role
+        :param user: The user to be bound to the role. This is required.
+        :type user: keystoneclient.v3.users.User
+        :param domain: The domain object. *args must match domain ^ project
+        :type domain: keystoneclient.v3.domains.Domain
+        :param project: The project object. *args must match domain ^ project
+        :type project: keystoneclient.v3.projects.Project
+        :returns: [keystoneclient.v3.role_assignments.RoleAssignment]
+        """
+        ks = self.admin_client_manager.get_keystone()
+        """
+        Because a role must have domain ^ project, we have to make as many
+        roles as necessary to please the client. Thus data is coppied
+        so it doesn't pollute the next run.
+        
+        It's worth noting the specific args ordering we are building is:
+        role, user, group, domain, project
+        """
+        role_assignment = [role, user, None] #build-a-request
+        role_possibilities = [domain, project] #unknown state
+        role_assignments = [] # Final list of required assignments
+        if None in role_possibilities:
+            # if [0,0], [0,1], or [1,0]
+            role_assignments = [role_assignment + role_possibilities]
+        else:
+            # [1,1]
+            role_assignments = [
+                role_assignment
+                + [role_possibilities[0]]
+                + [None],
+                role_assignment
+                + [None]
+                + [role_possibilities[1]]
+            ]
+            return [ks.roles.grant(*x) for x in role_assignments]
+        
     def get_resource_by_name(self, name, resource_type):
         """
-        Returns a keystone resource by name.
+        Fetches a keystone resource by name.
         
         Assumes names are unique, or at very least will just 
         return the first matching entity.
@@ -282,4 +316,3 @@ class KeystoneManager(object):
             return [resources.get(x.id) 
                 for x in resources.list() 
                 if x.name == name][0]
-
