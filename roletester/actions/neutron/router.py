@@ -51,6 +51,7 @@ def create(clients, context, name, external_network_id):
     resp = neutron.create_router(body=body)
     router = resp['router']
     context['router_id'] = router['id']
+    context.setdefault('stack', []).append({'router_id': router['id']})
 
 
 def delete(clients, context):

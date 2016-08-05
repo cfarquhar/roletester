@@ -46,6 +46,9 @@ def create(clients, context,
     resp = neutron.create_security_group_rule(body)
     rule = resp['security_group_rule']
     context.update(security_group_rule_id=rule['id'])
+    context.setdefault('stack', []).append(
+        {'security_group_rule_id': rule['id']}
+    )
 
 
 def delete(clients, context):

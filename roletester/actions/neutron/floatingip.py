@@ -53,6 +53,7 @@ def create(clients, context, floating_network_id, project_id=None):
     resp = neutron.create_floatingip(body=body)
     floatingip = resp['floatingip']
     context['floatingip_id'] = floatingip['id']
+    context.setdefault('stack', []).append({'floatingip_id': floatingip['id']})
 
 
 def delete(clients, context):

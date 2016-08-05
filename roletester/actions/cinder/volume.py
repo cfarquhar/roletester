@@ -1,5 +1,6 @@
 import time
 import utils
+from roletester.exc import CinderNotFound
 from roletester.log import logging
 
 logger = logging.getLogger('roletester.actions.cinder.volume')
@@ -17,20 +18,18 @@ def create(clients, context, size=1):
     """
     logger.info("Taking action create")
     cinder = clients.get_cinder()
-   
     name = utils.randomname(prefix='random-volume')
-
     meta = {'app': 'roletester'}
-
     volume = cinder.volumes.create(name=name, size=size, metadata=meta)
     context.update({'volume_id': volume.id})
+    context.setdefault('stack', []).append({'volume_id': volume.id})
     logger.info("Created volume {0} with metadata {1}"
                 .format(volume.name, volume.metadata))
 
 
 def delete(clients, context):
     """Deletes volume.
-    
+
     Uses context['volume_id']
 
     :param clients: Client manager
@@ -46,7 +45,6 @@ def delete(clients, context):
     context.pop('volume_id')
     logger.info("Deleted volume {0} - {1} - {2}"
                 .format(volume.name, volume.size, volume.metadata))
-
 
 
 def list(clients, context):
@@ -80,7 +78,8 @@ def show(clients, context):
     volume_id = context['volume_id']
     volume = cinder.volumes.get(volume_id)
     context.update(volume_status=volume.status.lower())
-    
+
+
 def attach(clients, context, mountpoint='/u01'):
     """Attaches a volume to a server.
 
@@ -97,7 +96,7 @@ def attach(clients, context, mountpoint='/u01'):
     logger.info("Attaching volume %s to %s" % (volume_id, server_id))
     volume = clients.get_cinder().volumes.get(volume_id)
     volume.attach(server_id, mountpoint)
-    
+
 
 def detach(clients, context):
     """Detaches a volume from a server.
@@ -113,17 +112,18 @@ def detach(clients, context):
     logger.info("Detaching volume %s" % volume_id)
     volume = clients.get_cinder().volumes.get(volume_id)
     volume.detach()
-    
-def create_image(clients, 
-                 context, 
+
+
+def create_image(clients,
+                 context,
                  name='cinder test image',
-                 container_format='bare', 
+                 container_format='bare',
                  disk_format='qcow2'):
     """Takes a snapshot of the volume and uploads it to glance.
-    
+
     Uses context['volume_id']
     Sets context['volume_image_id']
-    
+
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
@@ -132,25 +132,26 @@ def create_image(clients,
     :type name: String
     :param container_format: Disk container format.
     :type container_format: String
-    :param disk_format: Disk file format. 
+    :param disk_format: Disk file format.
     :type disk_format: String
     """
     volume_id = context['volume_id']
     logger.info("Creating image from %s" % volume_id)
     volume = clients.get_cinder().volumes.get(volume_id)
-    resp = volume.upload_to_image(False, 
-                                  name, 
-                                  container_format, 
+    resp = volume.upload_to_image(False,
+                                  name,
+                                  container_format,
                                   disk_format)
-    image_id = resp[1]['os-volume_upload_image']['image_id'] #GlanceProblems
+    # Glance Problems
+    image_id = resp[1]['os-volume_upload_image']['image_id']
     context.update(volume_image_id=image_id)
 
 
 # Statuses that indicate a terminating status
-_DONE_STATUS = set(['available', 
-                    'in-use', 
-                    'deleting', 
-                    'error', 
+_DONE_STATUS = set(['available',
+                    'in-use',
+                    'deleting',
+                    'error',
                     'error_deleting'])
 
 

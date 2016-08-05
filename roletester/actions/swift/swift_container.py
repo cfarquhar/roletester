@@ -22,6 +22,7 @@ def create(clients, context,
     swift = clients.get_swift()
     swift.put_container(name)
     context.update({'container_name': name})
+    context.setdefault('stack', []).append({'container_name': name})
 
 
 def delete(clients, context):

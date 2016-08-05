@@ -1,14 +1,15 @@
-from roletester import utils
+import time
+from roletester.exc import GlanceNotFound
 from roletester.log import logging
 
 logger = logging.getLogger('roletester.actions.glance.image')
 
 
-def create(clients, 
-           context, 
+def create(clients,
+           context,
            image_file,
-           name="glance test image", 
-           disk_format='qcow2', 
+           name="glance test image",
+           disk_format='qcow2',
            container_format='bare'):
     """Creates a glance image
 
@@ -37,9 +38,11 @@ def create(clients,
     glance = clients.get_glance()
     image = glance.images.create(**kwargs)
     context.update(image_id=image.id)
+    context.setdefault('stack', []).append({'image_id': image.id})
 
     glance.images.upload(image.id, open(image_file, 'rb'))
     logger.info("Created image {0}".format(image.name))
+
 
 def delete(clients, context, external_id=None):
     """Deletes an image from Glance.
@@ -52,16 +55,14 @@ def delete(clients, context, external_id=None):
     :type context: Dict
     :param external_id: Image id to delete (optional)
     :type external_id: String
-    
-
     """
     def delete_image(id):
         """*Actually* deletes an image from Glance.
-        
+
         Because delete controls for any image made by other services
         are handled by glance, we need a way to cleanup any image. Excluding
         the external_id param will default to context['image_id']
-        
+
         :param id: Image id to be deleted
         :type id: String
         """
@@ -70,8 +71,8 @@ def delete(clients, context, external_id=None):
         logger.info("Deleting image %s" % image.id)
         glance.images.delete(image.id)
         logger.info("Deleted image %s" % image.id)
-    
-    if external_id == None:
+
+    if external_id is None:
         image_id = context['image_id']
         delete_image(image_id)
         context.pop('image_id')
@@ -81,27 +82,28 @@ def delete(clients, context, external_id=None):
 
 def show(clients, context):
     """Shows a glance image.
-    
+
     Uses context['image_id']
     Sets context['image_status']
-    
+
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference context object.
     :type context: Dict
     """
     image_id = context['image_id']
-    logger.info("Showing image %s" %image_id)
+    logger.info("Showing image %s" % image_id)
     image = clients.get_glance().images.get(image_id)
-    logger.debug("Image info \"%s\": name: \"%s\" status: \"%s\"" %(image.id, 
-                                                            image.name, 
-                                                            image.status))
+    logger.debug(
+        'Image info "%s": name: "%s" status: "%s"' %
+        (image.id, image.name, image.status)
+    )
     context.update(image_status=image.status.lower())
 
-    
+
 def list(clients, context):
     """Lists glance images
-    
+
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference context object.
@@ -109,13 +111,15 @@ def list(clients, context):
     """
     glance = clients.get_glance()
     logger.info("Listing all images.")
-    images = [x.name for x in glance.images.list()] # It's a generator
+    # It's a generator
+    images = [x.name for x in glance.images.list()]
     log_template = "Images listing: " + ', '.join(["\"%s\""] * len(images))
     logger.debug(log_template % tuple(images))
 
 
 # Statuses that indicate a terminating status
 _DONE_STATUS = set(['active', 'killed', 'deleted'])
+
 
 def wait_for_status(admin_clients,
                     context,
