@@ -105,6 +105,7 @@ def create_image(clients, context, name='nova test image'):
 # Statuses that indicate a terminating status
 _DONE_STATUS = set(['ACTIVE', 'ERROR', 'DELETED'])
 
+
 def wait_for_status(admin_clients,
                     context,
                     timeout=60,
