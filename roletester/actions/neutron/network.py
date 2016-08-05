@@ -31,6 +31,7 @@ def create(clients, context, name, project_id=None):
     resp = neutron.create_network(body=body)
     network = resp['network']
     context['network_id'] = network['id']
+    context.setdefault('stack', []).append({'network_id': network['id']})
 
 
 def delete(clients, context):

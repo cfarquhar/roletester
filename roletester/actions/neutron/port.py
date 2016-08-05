@@ -29,6 +29,7 @@ def create(clients, context, name):
     resp = neutron.create_port(body=body)
     port = resp['port']
     context['port_id'] = port['id']
+    context.setdefault('stack', []).append({'port_id': port['id']})
 
 
 def delete(clients, context):

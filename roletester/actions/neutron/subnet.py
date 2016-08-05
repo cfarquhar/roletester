@@ -38,6 +38,7 @@ def create(clients, context,
     resp = neutron.create_subnet(body=body)
     subnet = resp['subnet']
     context['subnet_id'] = subnet['id']
+    context.setdefault('stack', []).append({'subnet_id': subnet['id']})
 
 
 def delete(clients, context):

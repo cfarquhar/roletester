@@ -26,6 +26,7 @@ def create(clients, context, name, flavor, image):
     flavor = nova.flavors.get(flavor)
     server = nova.servers.create(name, image, flavor)
     context.update({'server_id': server.id})
+    context.setdefault('stack', []).append({'server_id': server.id})
     logger.info("Created server {}".format(name))
 
 
@@ -82,14 +83,14 @@ def show(clients, context):
 
 def create_image(clients, context, name='nova test image'):
     """Takes a snapshot of an image.
-    
+
     Uses context['server_id']
     Sets context['server_image_id']
-    
+
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference context object.
-    :type context: Dict   
+    :type context: Dict
     """
     nova = clients.get_nova()
     server_id = context['server_id']

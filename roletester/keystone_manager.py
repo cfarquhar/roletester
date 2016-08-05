@@ -13,17 +13,17 @@ class KeystoneManager(object):
     Class for ensuring role assignments in keystone.
 
     Give it a role assignment, and it will return a user
-    that matches your demands. That may include making 
+    that matches your demands. That may include making
     any missing components (i.e., domain, project, user,
-    role) and return back a fresh user. 
+    role) and return back a fresh user.
     """
-    
+
     def __init__(self):
         """
         This is what holds the decryption keys for the hashes.
         It's really important that this doesn't change during
         a run, or you'll get different outputs.
-    
+
         :param key: The shared key used for 2 way encryption.
         :type key: 16 character length string.
         :param iv: The initialization vector for reversing a hash.
@@ -33,7 +33,7 @@ class KeystoneManager(object):
             'key': "Sixteen byte key",
             'iv': None #This gets populated on first use.
         }
-        
+
         """
         This is the big map of users. The key is a representation
         of its role assignment (domain, project, role). The value
@@ -41,30 +41,30 @@ class KeystoneManager(object):
         """
         self.__users = {}
         """
-        These credentials are so that we can create anything we 
+        These credentials are so that we can create anything we
         need to in keystone. They must be admin level credentials.
-        
+
         """
         env_vars_default = {
-            'OS_USERNAME': 'admin', 
-            'OS_PASSWORD': '', 
-            'OS_PROJECT_NAME': 'admin', 
-            'OS_AUTH_URL': 'http://127.0.0.1:5000/v3', 
-            'OS_USER_DOMAIN_NAME': 'Default', 
+            'OS_USERNAME': 'admin',
+            'OS_PASSWORD': '',
+            'OS_PROJECT_NAME': 'admin',
+            'OS_AUTH_URL': 'http://127.0.0.1:5000/v3',
+            'OS_USER_DOMAIN_NAME': 'Default',
             'OS_PROJECT_DOMAIN_NAME': 'Default'}
         self.env_vars = {
-            k[3:].lower(): os.getenv(k, v) 
+            k[3:].lower(): os.getenv(k, v)
             for (k,v) in env_vars_default.items()
         }
-        
+
         self.admin_client_manager = ClientManager(**self.env_vars)
-        
+
         """
         Used a few places to get keystone objects by string
         """
         self.ks_attr = lambda t: getattr(
             self.admin_client_manager.get_keystone(), "%ss" % t)
-            
+
     def teardown(self):
         """
         Need to ensure all users created during this are destroyed.
@@ -76,7 +76,7 @@ class KeystoneManager(object):
             if usr_test != []:
                 usr = usr_test[0]
                 ks.users.delete(usr)
-        
+
     def get_random_string(self, length):
         """
         Generates really nice random strings
@@ -87,11 +87,11 @@ class KeystoneManager(object):
         return ''.join(
             [random.choice(ascii_letters + digits)
             for x in range(length)])
-            
+
     def _get_cypher(self):
         """
         Builds a cypher for encryption/decryption
-        
+
         :returns: (Crypto.Cipher.AES, bytes)
         """
         key = self.__crypto_info['key']
@@ -103,13 +103,13 @@ class KeystoneManager(object):
             iv = self.__crypto_info['iv']
         return (AES.new(key, AES.MODE_CFB, iv), iv)
 
-    def find_user_credentials(self, 
-        domain='default', 
-        project='default', 
+    def find_user_credentials(self,
+        domain='default',
+        project='default',
         role='member'):
         """
         Finds a user that matches your auth needs, creating one if necessary.
-        
+
         :param domain: Keystone domain. Defaults to project's value.
         :type domain: string
         :param project: Keystone project. Default to `Default`
@@ -125,16 +125,16 @@ class KeystoneManager(object):
             return self.__users[hash]
         else:
             domain_resource = self._ensure_keystone_resource(
-                "domain", 
+                "domain",
                 domain)
             project_resource = self._ensure_keystone_resource(
-                "project", 
-                project, 
+                "project",
+                project,
                 domain)
             user_resource = self._ensure_keystone_resource(
-                "user", 
-                "test-user-%s" % self.get_random_string(6), 
-                domain, 
+                "user",
+                "test-user-%s" % self.get_random_string(6),
+                domain,
                 project)
             role_resource = self._ensure_keystone_resource(
                 "role",
@@ -158,15 +158,15 @@ class KeystoneManager(object):
             }
             self.__users[hash] = ClientManager(**user_kwargs)
             return self.__users[hash]
-    
-    def create_role_assignments(self, 
-        role=None, 
-        user=None, 
-        domain=None, 
+
+    def create_role_assignments(self,
+        role=None,
+        user=None,
+        domain=None,
         project=None):
         """
         Make role assignments from a list of keystone resources
-        
+
         :param role: The role to be assigned. This is required.
         :type role: keystoneclient.v3.roles.Role
         :param user: The user to be bound to the role. This is required.
@@ -182,7 +182,7 @@ class KeystoneManager(object):
         Because a role must have domain ^ project, we have to make as many
         roles as necessary to please the client. Thus data is coppied
         so it doesn't pollute the next run.
-        
+
         It's worth noting the specific args ordering we are building is:
         role, user, group, domain, project
         """
@@ -203,12 +203,12 @@ class KeystoneManager(object):
                 + [role_possibilities[1]]
             ]
             return [ks.roles.grant(*x) for x in role_assignments]
-        
+
     def get_resource_by_name(self, name, resource_type):
         """
         Fetches a keystone resource by name.
-        
-        Assumes names are unique, or at very least will just 
+
+        Assumes names are unique, or at very least will just
         return the first matching entity.
         :param name: name of the object to find
         :type name: string
@@ -219,19 +219,19 @@ class KeystoneManager(object):
         if name == None: # None specified by user
             return None
         ks = self.admin_client_manager.get_keystone()
-        collection = [x 
-            for x in self.ks_attr(resource_type).list() 
+        collection = [x
+            for x in self.ks_attr(resource_type).list()
             if x.name == name]
         if collection == []:
             return None
         else:
             return collection[0]
-            
+
 
     def _encode_hash(self, *args):
         """
         Hashes a list of *args into a single value.
-        
+
         :param: list of strigs to pack
         :type *args: [string]
         :returns: string
@@ -245,20 +245,20 @@ class KeystoneManager(object):
     def _decode_hash(self, hash):
         """
         Decodes a hashed string created by _encode_hash().
-        
+
         Not really used, but handy to have in case something goes sideways.
-        
+
         :param hash: A hashed list
         :type hash: string
         :returns: string
         """
         (cipher, iv) = self._get_cypher()
         return cipher.decrypt(hash.decode('hex'))[len(iv):].split('|')
-        
+
     def _entity_exists(self, keystone_type, name):
         """
         Checks to see if keystone has a matching record.
-        
+
         :param keystone_type: Keystone resource "project" || "domain" || "role"
         :type keystone_type: string
         :param name: matching name, like `member` for a role
@@ -267,25 +267,25 @@ class KeystoneManager(object):
         """
         ks = self.admin_client_manager.get_keystone()
         return name in [x.name for x in getattr(ks, keystone_type).list()]
-        
-    def _ensure_keystone_resource(self, 
-        keystone_resource_type, 
-        name, 
-        domain_name=None, 
+
+    def _ensure_keystone_resource(self,
+        keystone_resource_type,
+        name,
+        domain_name=None,
         project_name=None):
         """
         Gets (or creates and returns) a keystone domain by name.
-        
+
         :param name: Keystone domain name
         :type name: string
         :returns: keystoneclient.v3.domains.Domain
         """
-        
+
         ks = self.admin_client_manager.get_keystone() # used like, everywhere
-        
+
         # clarity
         resources = self.ks_attr(keystone_resource_type)
-        
+
         """
         check whether a keystone object exists in its list by name.
         :returns: boolean
@@ -306,9 +306,9 @@ class KeystoneManager(object):
                 self.get_resource_by_name(domain_name, 'domain'),
                 self.get_resource_by_name(project_name, 'project')
             ]
-            
+
         }
-        
+
         if entity_exists(name) == False:
             """
             create the resource!
@@ -334,6 +334,6 @@ class KeystoneManager(object):
             """
             load the resource
             """
-            return [resources.get(x.id) 
-                for x in resources.list() 
+            return [resources.get(x.id)
+                for x in resources.list()
                 if x.name == name][0]

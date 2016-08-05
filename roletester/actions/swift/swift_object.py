@@ -28,6 +28,10 @@ def put(clients, context, obj_name="test_object", obj_contents=""):
     swift.put_object(container, obj_name, obj_contents)
 
     context.update({"object_name": obj_name})
+    context.setdefault('stack', []).append({
+        'container_name': container,
+        'object_name': obj_name
+    })
 
 
 def delete(clients, context):
@@ -88,7 +92,10 @@ def replace_metadata(clients, context,
     :param metadata: Dict of metadata headers
     :type metadata: Dict
     """
-    logger.info("Taking action object.replace_metadata {}.".format(context['object_name']))
+    logger.info(
+        "Taking action object.replace_metadata {}."
+        .format(context['object_name'])
+    )
     add_metadata(clients, context, metadata)
     delete_metadata(clients, context)
 
