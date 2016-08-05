@@ -135,7 +135,7 @@ def delete_metadata(clients, context):
     container = context['container_name']
     obj_name = context['object_name']
     metadata = copy.deepcopy(context['object_metadata'])
-    logger.info("Taking action object.delete_metadata {}".format(obj_name))
+    logger.info("Taking action object.delete_metadata {}.".format(obj_name))
 
     # Delete metadata by removing each key's value
     for key in metadata.keys():

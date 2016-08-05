@@ -36,7 +36,7 @@ def delete(clients, context):
     :type context: Dict
     """
     name = context['container_name']
-    logger.info("Taking action container.delete {}".format(name))
+    logger.info("Taking action container.delete {}.".format(name))
     swift = clients.get_swift()
     swift.delete_container(name)
     context.pop('container_name')
@@ -53,7 +53,7 @@ def get(clients, context):
     :type context: Dict
     """
     name = context['container_name']
-    logger.info("Taking action container.get {}".format(name))
+    logger.info("Taking action container.get {}.".format(name))
     swift = clients.get_swift()
     swift.get_container(name)
     swift.head_container(name)
@@ -75,7 +75,7 @@ def add_metadata(clients, context,
     """
     name = context['container_name']
     context.update({"container_metadata": copy.deepcopy(metadata)})
-    logger.info("Taking action container.add_metadata {}".format(name))
+    logger.info("Taking action container.add_metadata {}.".format(name))
     swift = clients.get_swift()
     swift.post_container(name, metadata)
 
@@ -95,7 +95,7 @@ def delete_metadata(clients, context):
     """
     name = context['container_name']
     metadata = copy.deepcopy(context['container_metadata'])
-    logger.info("Taking action container.delete_metadata {}".format(name))
+    logger.info("Taking action container.delete_metadata {}.".format(name))
 
     # Delete metadata by removing each key's value
     for key in metadata.keys():
