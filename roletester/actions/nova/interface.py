@@ -1,6 +1,6 @@
 from roletester.log import logging
 
-logger = logging.getLogger('roletester.actions.nova.interface')
+logger = logging.getLogger('roletester.actions.nova.volume')
 
 
 def attach(clients, context):

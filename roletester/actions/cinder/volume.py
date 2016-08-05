@@ -79,10 +79,78 @@ def show(clients, context):
     volume_id = context['volume_id']
     volume = cinder.volumes.get(volume_id)
     context.update(volume_status=volume.status.lower())
+    
+def attach(clients, context, mountpoint='/u01'):
+    """Attaches a volume to a server.
+
+    Uses context['server_id']
+    Uses context['volume_id']
+
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    """
+    volume_id = context['volume_id']
+    server_id = context['server_id']
+    logger.info("Attaching volume %s to %s" % (volume_id, server_id))
+    volume = clients.get_cinder().volumes.get(volume_id)
+    volume.attach(server_id, mountpoint)
+    
+
+def detach(clients, context):
+    """Detaches a volume from a server.
+
+    Uses context['volume_id']
+
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    """
+    volume_id = context['volume_id']
+    logger.info("Detaching volume %s" % volume_id)
+    volume = clients.get_cinder().volumes.get(volume_id)
+    volume.detach()
+    
+def create_image(clients, 
+                 context, 
+                 name='cinder test image',
+                 container_format='bare', 
+                 disk_format='qcow2'):
+    """Takes a snapshot of the volume and uploads it to glance.
+    
+    Uses context['volume_id']
+    Sets context['volume_image_id']
+    
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param name: Image name
+    :type name: String
+    :param container_format: Disk container format.
+    :type container_format: String
+    :param disk_format: Disk file format. 
+    :type disk_format: String
+    """
+    volume_id = context['volume_id']
+    logger.info("Creating image from %s" % volume_id)
+    volume = clients.get_cinder().volumes.get(volume_id)
+    resp = volume.upload_to_image(False, 
+                                  name, 
+                                  container_format, 
+                                  disk_format)
+    image_id = resp[1]['os-volume_upload_image']['image_id'] #GlanceProblems
+    context.update(volume_image_id=image_id)
 
 
 # Statuses that indicate a terminating status
-_DONE_STATUS = set(['available', 'in-use', 'deleting', 'error', 'error_deleting'])
+_DONE_STATUS = set(['available', 
+                    'in-use', 
+                    'deleting', 
+                    'error', 
+                    'error_deleting'])
 
 
 def wait_for_status(admin_clients,
