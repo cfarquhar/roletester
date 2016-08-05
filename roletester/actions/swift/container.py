@@ -1,5 +1,6 @@
 """Module containing actions to manage swift containers."""
 from roletester.log import logging
+import copy
 
 logger = logging.getLogger('roletester.actions.swift.container')
 
@@ -7,6 +8,8 @@ logger = logging.getLogger('roletester.actions.swift.container')
 def create(clients, context,
            name="test_container"):
     """Create a container
+
+    Sets context['container_name']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -18,62 +21,81 @@ def create(clients, context,
     logger.info("Taking action container.create {}.".format(name))
     swift = clients.get_swift()
     swift.put_container(name)
-
-####
+    context.update({'container_name': name})
 
 def delete(clients, context):
-    """Deletes a subnet.
+    """Deletes a container.
 
-    Uses context['subnet_id']
-    Removes context['subnet_id']
-
-    :param clients: Client Manager
-    :type clients: roletester.clients.ClientManager
-    :param context: Pass by reference object
-    :type context: Dict
-    """
-    subnet_id = context['subnet_id']
-    logger.info("Taking action subnet.delete {}".format(subnet_id))
-    neutron = clients.get_neutron()
-    neutron.delete_subnet(subnet_id)
-    context.pop('subnet_id')
-
-
-def show(clients, context):
-    """Shows info for a specific subnet.
-
-    Uses context['subnet_id']
-    Sets subnet['name']
+    Uses context['container_name']
+    Removes context['container_name']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
     :type context: Dict
     """
-    subnet_id = context['subnet_id']
-    logger.info("Taking action subnet.show {}".format(subnet_id))
-    neutron = clients.get_neutron()
-    resp = neutron.show_subnet(subnet_id)
-    subnet = resp['subnet']
-    context['subnet_name'] = subnet['name']
+    name = context['container_name']
+    logger.info("Taking action container.delete {}".format(name))
+    swift = clients.get_swift()
+    swift.delete_container(name)
+    context.pop('container_name')
 
+def get(clients, context):
+    """Retrieves stats and lists objects in a container.
 
-def update(clients, context, name=None):
-    """Update properties of a subnet.
-
-    Uses context['subnet_id']
+    Uses context['container_name']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
     :type context: Dict
-    :param name: Optional new name of subnet
-    :type name: String
     """
-    subnet_id = context['subnet_id']
-    logger.info("Taking action subnet.update {}.".format(subnet_id))
-    neutron = clients.get_neutron()
-    body = {'subnet': {}}
-    if name is not None:
-        body['subnet']['name'] = name
-    neutron.update_subnet(subnet_id, body=body)
+    name = context['container_name']
+    logger.info("Taking action container.get {}".format(name))
+    swift = clients.get_swift()
+    resp = swift.get_container(name)
+    resp = swift.head_container(name)
+
+def add_metadata(clients, context, metadata = {"X-Container-Meta-Author": "JohnDoe"}):
+    """Sets metadata on a container.
+
+    Uses context['container_name']
+    Sets context['container_metadata']
+
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param metadata: Dict of metadata headers
+    :type metadata: Dict
+    """
+    name = context['container_name']
+    context.update({"container_metadata": copy.deepcopy(metadata)})
+    logger.info("Taking action container.add_metadata {}".format(name))
+    swift = clients.get_swift()
+    swift.post_container(name, metadata)
+
+def delete_metadata(clients, context):
+    """Sets metadata on a container.
+
+    Uses context['container_name']
+    Deletes context['container_metadata']
+
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param metadata: Dict of metadata headers
+    :type metadata: Dict
+    """
+    name = context['container_name']
+    metadata = copy.deepcopy(context['container_metadata'])
+    logger.info("Taking action container.delete_metadata {}".format(name))
+
+    # Delete metadata by removing each key's value
+    for key in metadata.keys():
+        metadata[key] = ''
+
+    swift = clients.get_swift()
+    swift.post_container(name, metadata)
+    context.pop('container_metadata')
