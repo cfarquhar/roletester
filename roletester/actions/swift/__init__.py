@@ -1,8 +1,8 @@
-from container import create as container_create
-from container import delete as container_delete
-from container import get as container_get
-from container import add_metadata as container_add_metadata
-from container import delete_metadata as container_delete_metadata
+from swift_container import create as swift_container_create
+from swift_container import delete as swift_container_delete
+from swift_container import get as swift_container_get
+from swift_container import add_metadata as swift_container_add_metadata
+from swift_container import delete_metadata as swift_container_delete_metadata
 
 from swift_object import put as swift_object_put
 from swift_object import delete as swift_object_delete
