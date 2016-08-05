@@ -1,6 +1,7 @@
 import time
 from roletester.exc import GlanceNotFound
 from roletester.log import logging
+import time
 
 logger = logging.getLogger('roletester.actions.glance.image')
 
