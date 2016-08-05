@@ -1,5 +1,6 @@
 from roletester import utils
 from roletester.log import logging
+import time
 
 logger = logging.getLogger('roletester.actions.glance.image')
 
