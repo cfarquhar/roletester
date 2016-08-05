@@ -7,6 +7,7 @@ from novaclient import client as novaclient
 from glanceclient import Client as glanceclient
 from keystoneclient import client as keystoneclient
 from neutronclient.v2_0 import client as neutronclient
+from swiftclient import client as swiftclient
 
 class ClientManager(object):
     """Object that manages multiple openstack clients.
@@ -26,6 +27,7 @@ class ClientManager(object):
         self.nova = None
         self.glance = None
         self.cinder = None
+        self.swift = None
         self.keystone = None
         self.auth_kwargs = auth_kwargs
 
@@ -83,6 +85,19 @@ class ClientManager(object):
                                               session=self.get_session(),
                                               interface=iface)
         return self.cinder
+
+    def get_swift(self):
+        """Get a swift client.Connection instance.
+
+        :return: swiftclient.client.Connection
+        """
+        if self.swift is None:
+            self.swift = swiftclient.Connection(auth_version='3',
+                                                authurl=self.auth_kwargs["auth_url"],
+                                                user=self.auth_kwargs["username"],
+                                                key=self.auth_kwargs["password"],
+                                                tenant_name=self.auth_kwargs["project_id"])
+        return self.swift
         
     def get_keystone(self, version='3'):
         """Get a keystone client instance.

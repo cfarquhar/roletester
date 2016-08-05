@@ -1,3 +1,9 @@
+from floatingip import associate as floatingip_associate
+from floatingip import create as floatingip_create
+from floatingip import delete as floatingip_delete
+from floatingip import disassociate as floatingip_disassociate
+from floatingip import show as floatingip_show
+
 from network import create as network_create
 from network import delete as network_delete
 from network import show as network_show
@@ -7,6 +13,13 @@ from port import create as port_create
 from port import delete as port_delete
 from port import show as port_show
 from port import update as port_update
+
+from router import add_interface as router_add_interface
+from router import create as router_create
+from router import delete as router_delete
+from router import remove_interface as router_remove_interface
+from router import show as router_show
+from router import update as router_update
 
 from security_group import add_to_server as security_group_add_to_server
 from security_group import create as security_group_create
@@ -24,15 +37,28 @@ from subnet import show as subnet_show
 from subnet import update as subnet_update
 
 __all__ = [
+    'floatingip_associate',
+    'floatingip_create',
+    'floatingip_delete',
+    'floatingip_disassociate',
+    'floatingip_show',
+
     'network_create',
     'network_delete',
     'network_show',
     'network_update',
 
-    'port_create_for_server',
+    'port_create',
     'port_delete',
     'port_show',
     'port_update',
+
+    'router_add_interface',
+    'router_create',
+    'router_delete',
+    'router_remove_interface',
+    'router_show',
+    'router_update',
 
     'security_group_add_to_server',
     'security_group_create',
