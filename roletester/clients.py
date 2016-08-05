@@ -27,7 +27,7 @@ class ClientManager(object):
         self.nova = None
         self.glance = None
         self.cinder = None
-	self.swift = None
+        self.swift = None
         self.keystone = None
         self.auth_kwargs = auth_kwargs
 
