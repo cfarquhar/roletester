@@ -43,6 +43,7 @@ def delete(clients, context):
     nova = clients.get_nova()
     server_id = context['server_id']
     logger.info("Deleting {0} ...".format(server_id))
+    context.pop('server_id')
     nova.servers.delete(server_id)
 
 
@@ -97,6 +98,7 @@ def create_image(clients, context, name='nova test image'):
     logger.info("Creating image of instance %s" % server_id)
     image_id = server.create_image(name, meta)
     context.update(server_image_id=image_id)
+    logger.info("Created server image %s" % image_id)
 
 
 # Statuses that indicate a terminating status

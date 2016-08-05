@@ -43,6 +43,7 @@ def delete(clients, context):
 
     volume = cinder.volumes.get(context['volume_id'])
     cinder.volumes.delete(volume)
+    context.pop('volume_id')
     logger.info("Deleted volume {0} - {1} - {2}"
                 .format(volume.name, volume.size, volume.metadata))
 
@@ -189,7 +190,7 @@ def wait_for_status(admin_clients,
         while (time.time() - start < timeout):
             show(admin_clients, context)
             status = context['volume_status']
-            logger.debug("Found status {}".format(status.lower()))
+            logger.debug("Found status {}".format(status))
             if status == target_status:
                 context.pop('volume_status')
                 break
