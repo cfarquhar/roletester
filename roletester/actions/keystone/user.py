@@ -23,6 +23,7 @@ def create(clients, context, name="test_user", password="test_pass"):
     keystone = clients.get_keystone()
     user = keystone.users.create(name, domain="Default", password="test")
     context.update({'user': user})
+    context.setdefault('stack', []).append({'user_obj': user})
 
 
 def delete(clients, context):
