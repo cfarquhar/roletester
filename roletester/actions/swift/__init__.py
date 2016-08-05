@@ -12,11 +12,11 @@ from swift_object import add_metadata as swift_object_add_metadata
 from swift_object import delete_metadata as swift_object_delete_metadata
 
 __all__ = [
-    'container_create',
-    'container_delete',
-    'container_get',
-    'container_add_metadata',
-    'container_delete_metadata',
+    'swift_container_create',
+    'swift_container_delete',
+    'swift_container_get',
+    'swift_container_add_metadata',
+    'swift_container_delete_metadata',
 
     'swift_object_put',
     'swift_object_delete',
