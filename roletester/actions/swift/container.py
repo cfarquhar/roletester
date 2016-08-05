@@ -23,6 +23,7 @@ def create(clients, context,
     swift.put_container(name)
     context.update({'container_name': name})
 
+
 def delete(clients, context):
     """Deletes a container.
 
@@ -40,6 +41,7 @@ def delete(clients, context):
     swift.delete_container(name)
     context.pop('container_name')
 
+
 def get(clients, context):
     """Retrieves stats and lists objects in a container.
 
@@ -53,10 +55,12 @@ def get(clients, context):
     name = context['container_name']
     logger.info("Taking action container.get {}".format(name))
     swift = clients.get_swift()
-    resp = swift.get_container(name)
-    resp = swift.head_container(name)
+    swift.get_container(name)
+    swift.head_container(name)
 
-def add_metadata(clients, context, metadata = {"X-Container-Meta-Author": "JohnDoe"}):
+
+def add_metadata(clients, context,
+                 metadata={"X-Container-Meta-Author": "JohnDoe"}):
     """Sets metadata on a container.
 
     Uses context['container_name']
@@ -74,6 +78,7 @@ def add_metadata(clients, context, metadata = {"X-Container-Meta-Author": "JohnD
     logger.info("Taking action container.add_metadata {}".format(name))
     swift = clients.get_swift()
     swift.post_container(name, metadata)
+
 
 def delete_metadata(clients, context):
     """Sets metadata on a container.
