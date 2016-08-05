@@ -8,6 +8,8 @@ from exc import NovaNotFound
 from roletester.actions.cinder import volume_delete
 from roletester.actions.cinder import volume_wait_for_status
 from roletester.actions.glance import image_delete
+from roletester.actions.keystone import project_delete
+from roletester.actions.keystone import user_delete
 from roletester.actions.neutron import floatingip_delete
 from roletester.actions.neutron import network_delete
 from roletester.actions.neutron import port_delete
@@ -55,7 +57,13 @@ class Collector(object):
 
             'volume_id': Scenario()
             .chain(volume_wait_for_status, clients)
-            .chain(volume_delete, clients)
+            .chain(volume_delete, clients),
+
+            'project_obj': Scenario()
+            .chain(project_delete, clients),
+
+            'user_obj': Scenario()
+            .chain(user_delete, clients)
         }
 
     def delete(self, resource_dict):
