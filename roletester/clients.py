@@ -91,10 +91,10 @@ class ClientManager(object):
         """
         if self.swift is None:
             self.swift = swiftclient.Connection(auth_version='3',
-						authurl=self.auth_kwargs["auth_url"],
-						user=self.auth_kwargs["username"],
-						key=self.auth_kwargs["password"],
-						tenant_name=self.auth_kwargs["project_id"])
+                                                authurl=self.auth_kwargs["auth_url"],
+                                                user=self.auth_kwargs["username"],
+                                                key=self.auth_kwargs["password"],
+                                                tenant_name=self.auth_kwargs["project_id"])
         return self.swift
         
     def get_keystone(self, version='3'):
