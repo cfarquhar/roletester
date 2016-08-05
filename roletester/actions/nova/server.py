@@ -99,6 +99,7 @@ def create_image(clients, context, name='nova test image'):
     logger.info("Creating image of instance %s" % server_id)
     image_id = server.create_image(name, meta)
     context.update(server_image_id=image_id)
+    context.setdefault('stack', []).append({'image_id': image_id})
     logger.info("Created server image %s" % image_id)
 
 

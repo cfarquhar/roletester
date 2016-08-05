@@ -23,6 +23,7 @@ def create(clients, context, name="test_project", domain='Default'):
     keystone = clients.get_keystone()
     project = keystone.projects.create(name, domain)
     context.update({'project': project})
+    context.setdefault('stack', []).append({'project_obj': project})
 
 
 def delete(clients, context):
