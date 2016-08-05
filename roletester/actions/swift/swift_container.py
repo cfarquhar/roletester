@@ -2,7 +2,7 @@
 from roletester.log import logging
 import copy
 
-logger = logging.getLogger('roletester.actions.swift.container')
+logger = logging.getLogger('roletester.actions.swift.swift_container')
 
 
 def create(clients, context,

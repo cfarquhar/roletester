@@ -2,7 +2,7 @@
 from roletester.log import logging
 import copy
 
-logger = logging.getLogger('roletester.actions.swift.object')
+logger = logging.getLogger('roletester.actions.swift.swift_object')
 
 
 def put(clients, context, obj_name="test_object", obj_contents=""):
