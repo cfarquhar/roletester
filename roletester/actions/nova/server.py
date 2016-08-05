@@ -30,7 +30,7 @@ def create(clients, context, name, flavor, image):
 
 
 def delete(clients, context):
-    """Deletes random server.
+    """Deletes a server.
 
     Uses context['server_id']
 
@@ -43,6 +43,7 @@ def delete(clients, context):
     nova = clients.get_nova()
     server_id = context['server_id']
     logger.info("Deleting {0} ...".format(server_id))
+    context.pop('server_id')
     nova.servers.delete(server_id)
 
 
@@ -71,7 +72,6 @@ def show(clients, context):
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference context object.
     :type context: Dict
-
     """
     logger.info("Taking action server.show")
     nova = clients.get_nova()
@@ -80,9 +80,29 @@ def show(clients, context):
     context.update(server_status=server.status)
 
 
+def create_image(clients, context, name='nova test image'):
+    """Takes a snapshot of an image.
+    
+    Uses context['server_id']
+    Sets context['server_image_id']
+    
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference context object.
+    :type context: Dict   
+    """
+    nova = clients.get_nova()
+    server_id = context['server_id']
+    server = nova.servers.get(server_id)
+    meta = server.metadata
+    logger.info("Creating image of instance %s" % server_id)
+    image_id = server.create_image(name, meta)
+    context.update(server_image_id=image_id)
+    logger.info("Created server image %s" % image_id)
+
+
 # Statuses that indicate a terminating status
 _DONE_STATUS = set(['ACTIVE', 'ERROR', 'DELETED'])
-
 
 def wait_for_status(admin_clients,
                     context,

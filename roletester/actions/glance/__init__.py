@@ -1,11 +1,11 @@
-from create import create
-from delete import delete
-from list import list
-from usage import usage
+from image import create as image_create
+from image import delete as image_delete
+from image import list as image_list
+from image import show as image_show
 
 __all__ = [
-    'create',
-    'delete',
-    'list',
-    'usage'
+    'image_create',
+    'image_delete',
+    'image_list',
+    'image_show'
 ]

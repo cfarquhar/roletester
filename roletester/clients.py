@@ -80,8 +80,10 @@ class ClientManager(object):
         :return: cinderclient.client.Client
         """
         if self.cinder is None:
+            iface = os.getenv('OS_ENDPOINT_TYPE', "public")
             self.cinder = cinderclient.Client(version,
-                                              session=self.get_session())
+                                              session=self.get_session(),
+                                              interface=iface)
         return self.cinder
 
     def get_swift(self):
