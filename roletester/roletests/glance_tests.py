@@ -5,6 +5,7 @@ from roletester.actions.glance import image_update
 from roletester.actions.glance import image_delete
 from roletester.actions.glance import image_wait_for_status
 from roletester.exc import NovaNotFound
+from roletester.exc import GlanceNotFound
 from roletester.exc import GlanceUnauthorized
 from roletester.scenario import ScenarioFactory as Factory
 
@@ -85,8 +86,8 @@ class TestSample(BaseTestCase):
                  clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'private'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator, expected_exceptions=[GlanceUnauthorized]) \
-            .set(SampleFactory.IMAGE_SHOW, expected_exceptions=[GlanceUnauthorized]) \
+            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
+            .set(SampleFactory.IMAGE_SHOW, expected_exceptions=[GlanceUnauthorized,GlanceNotFound]) \
             .set(SampleFactory.IMAGE_UPDATE, expected_exceptions=[GlanceUnauthorized]) \
             .set(SampleFactory.IMAGE_DELETE, expected_exceptions=[GlanceUnauthorized]) \
             .produce() \
