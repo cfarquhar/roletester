@@ -81,11 +81,12 @@ class Collector(object):
                 )
                 continue
             try:
-                scenario.run(resource_dict)
+                scenario.run(context=resource_dict)
             except (CinderNotFound,
                     GlanceNotFound,
                     NeutronNotFound,
                     NovaNotFound):
+                logger.debug("{}:{} Was not found.".format(key, resource_id))
                 pass
             except Exception:
                 logger.exception(
