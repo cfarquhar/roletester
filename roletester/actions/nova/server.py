@@ -5,7 +5,7 @@ from roletester.log import logging
 logger = logging.getLogger('roletester.actions.nova.server')
 
 
-def create(clients, context, name, flavor, image):
+def create(clients, context, name='nova test instance', flavor=None, image=None):
     """Creates server with random image and flavor.
 
     Sets context['server_id']
@@ -21,10 +21,19 @@ def create(clients, context, name, flavor, image):
     :param image: Image id
     :type image: String
     """
-    logger.info("Taking action create")
     nova = clients.get_nova()
-    flavor = nova.flavors.get(flavor)
-    server = nova.servers.create(name, image, flavor)
+    if flavor == None:
+        flavor = nova.flavors.list()[0].id
+    else:
+        flavor = nova.flavors.get(flavor)
+    if image == None:
+        image = nova.images.get(context['image_id'])
+    else:
+        image = nova.images.get(image)
+    logger.info(": %s"% image.id)
+    logger.info("Taking action create")
+    meta = {"test-key": "test-value"}
+    server = nova.servers.create(name, image, flavor, meta)
     context.update({'server_id': server.id})
     context.setdefault('stack', []).append({'server_id': server.id})
     logger.info("Created server {}".format(name))
@@ -46,6 +55,22 @@ def delete(clients, context):
     logger.info("Deleting {0} ...".format(server_id))
     context.pop('server_id')
     nova.servers.delete(server_id)
+
+def update(clients, context, meta={"test-key": "modified-test-value"}):
+    """Update's a server's metadata
+    
+    Uses context['server_id']
+    
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param meta: new metadata
+    :type meta: Dict
+    """
+    nova = clients.get_nova()
+    server = nova.servers.get(context['server_id'])
+    logger.debug("Editing instance %s" % server.id)
+    nova.servers.set_meta(server, meta)
+    logger.debug("Instance %s edited." % server.id)
 
 
 def list(clients, context):

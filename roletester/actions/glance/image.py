@@ -9,10 +9,11 @@ logger = logging.getLogger('roletester.actions.glance.image')
 def create(clients,
            context,
            image_file,
+           visibility='private',
            name="glance test image",
            disk_format='qcow2',
            container_format='bare'):
-    """Creates a glance image
+    """Creates a glance image.
 
     Uses context['image_id']
 
@@ -22,6 +23,8 @@ def create(clients,
     :type context: Dict
     :param image_file: File path to image file you are uploading
     :type image_file: String
+    :param visibility: Sets image availability. public | private
+    :type visibility: Boolean
     :param name: Image name
     :type name: String
     :param disk_format: Glance disk file format
@@ -29,12 +32,13 @@ def create(clients,
     :param container_format: Image container format
     :type container_format: String
     """
-    logger.info("Taking action image_create")
+    logger.debug("Taking action image_create")
 
     kwargs = {
         'name': name,
         'disk_format': disk_format,
         'container_format': container_format,
+        'visibility': visibility
     }
     glance = clients.get_glance()
     image = glance.images.create(**kwargs)
@@ -42,7 +46,7 @@ def create(clients,
     context.setdefault('stack', []).append({'image_id': image.id})
 
     glance.images.upload(image.id, open(image_file, 'rb'))
-    logger.info("Created image {0}".format(image.name))
+    logger.debug("Created image {0}".format(image.name))
 
 
 def delete(clients, context, external_id=None):
@@ -69,16 +73,17 @@ def delete(clients, context, external_id=None):
         """
         glance = clients.get_glance()
         image = glance.images.get(id)
-        logger.info("Deleting image %s" % image.id)
+        logger.debug("Deleting image %s" % image.id)
         glance.images.delete(image.id)
-        logger.info("Deleted image %s" % image.id)
+        logger.debug("Deleted image %s" % image.id)
 
     if external_id is None:
         image_id = context['image_id']
         delete_image(image_id)
-        context.pop('image_id')
     else:
         delete_image(external_id)
+    context.pop('image_id')
+    logger.debug(context)
 
 
 def show(clients, context):
@@ -93,7 +98,7 @@ def show(clients, context):
     :type context: Dict
     """
     image_id = context['image_id']
-    logger.info("Showing image %s" % image_id)
+    logger.debug("Showing image %s" % image_id)
     image = clients.get_glance().images.get(image_id)
     logger.debug(
         'Image info "%s": name: "%s" status: "%s"' %
@@ -111,11 +116,26 @@ def list(clients, context):
     :type context: Dict
     """
     glance = clients.get_glance()
-    logger.info("Listing all images.")
+    logger.debug("Listing all images.")
     # It's a generator
     images = [x.name for x in glance.images.list()]
     log_template = "Images listing: " + ', '.join(["\"%s\""] * len(images))
     logger.debug(log_template % tuple(images))
+
+def update(clients, context):
+    """Updates glance metadata
+    
+     Uses context['image_id']
+
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference context object.
+    :type context: Dict
+    """
+    glance = clients.get_glance()
+    image_id = context['image_id']
+    glance.images.update(image_id, metadata='updated')
+    logger.debug("Updated metadata for image %s" % image_id)
 
 
 # Statuses that indicate a terminating status
@@ -148,7 +168,7 @@ def wait_for_status(admin_clients,
         a NotFoundException will be allowed.
     :type target_status: String
     """
-    logger.info("Taking action wait for image")
+    logger.debug("Taking action wait for image")
 
     if initial_wait:
         time.sleep(initial_wait)
