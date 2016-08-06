@@ -85,7 +85,7 @@ class TestSample(BaseTestCase):
                  clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'private'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
+            .set(SampleFactory.IMAGE_WAIT, clients=creator, expected_exceptions=[GlanceUnauthorized]) \
             .set(SampleFactory.IMAGE_SHOW, expected_exceptions=[GlanceUnauthorized]) \
             .set(SampleFactory.IMAGE_UPDATE, expected_exceptions=[GlanceUnauthorized]) \
             .set(SampleFactory.IMAGE_DELETE, expected_exceptions=[GlanceUnauthorized]) \
