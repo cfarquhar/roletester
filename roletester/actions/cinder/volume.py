@@ -1,5 +1,5 @@
 import time
-import utils
+from roletester import utils
 from roletester.exc import CinderNotFound
 from roletester.log import logging
 

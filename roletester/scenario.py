@@ -42,7 +42,7 @@ class Scenario(list):
             each action in the scenario.
         :type context: Dict
         """
-        context = context or {}
+        context = context if context is not None else {}
         for action, clients, expected_exceptions, args, kwargs in self:
             try:
                 action(clients, context, *args, **kwargs)
