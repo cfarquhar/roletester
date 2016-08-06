@@ -4,7 +4,7 @@ from roletester.log import logging
 logger = logging.getLogger('roletester.actions.neutron.network')
 
 
-def create(clients, context, name, project_id=None):
+def create(clients, context, name='test network', project_id=None):
     """Create a network
 
     Sets context['network_id']

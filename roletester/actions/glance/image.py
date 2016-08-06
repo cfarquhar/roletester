@@ -49,7 +49,7 @@ def create(clients,
     logger.debug("Created image {0}".format(image.name))
 
 
-def delete(clients, context, external_id=None):
+def delete(clients, context, image_key=None):
     """Deletes an image from Glance.
 
     Uses context['image_id']
@@ -58,8 +58,8 @@ def delete(clients, context, external_id=None):
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference context object.
     :type context: Dict
-    :param external_id: Image id to delete (optional)
-    :type external_id: String
+    :param image_key: key name in context to delete (like server_image_id)
+    :type image_id: String
     """
     def delete_image(id):
         """*Actually* deletes an image from Glance.
@@ -76,35 +76,42 @@ def delete(clients, context, external_id=None):
         logger.debug("Deleting image %s" % image.id)
         glance.images.delete(image.id)
         logger.debug("Deleted image %s" % image.id)
-
-    if external_id is None:
+    pop_key = False
+    if image_key is None:
         image_id = context['image_id']
-        delete_image(image_id)
+        pop_key = True
     else:
-        delete_image(external_id)
-    context.pop('image_id')
+        image_id = context[image_key]
+    delete_image(image_id)
+    if pop_key:
+        context.pop('image_id')
     logger.debug(context)
 
 
-def show(clients, context):
+def show(clients, context, image_key='image_id', context_key='image_status'):
     """Shows a glance image.
 
-    Uses context['image_id']
-    Sets context['image_status']
+    Uses context['image_id'] or other specified with image_key
+    Sets context['image_status'] or other specified with context_key
 
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference context object.
     :type context: Dict
+    :param image_key: Explicit image id to show
+    :type image_key: String
+    :param context_key: Context key to set. Useful for volume, server images
+    :type context_key: String
     """
-    image_id = context['image_id']
+
+    image_id = context[image_key]
     logger.debug("Showing image %s" % image_id)
     image = clients.get_glance().images.get(image_id)
     logger.debug(
         'Image info "%s": name: "%s" status: "%s"' %
         (image.id, image.name, image.status)
     )
-    context.update(image_status=image.status.lower())
+    context[context_key] = image.status.lower()
 
 
 def list(clients, context):
@@ -144,6 +151,7 @@ _DONE_STATUS = set(['active', 'killed', 'deleted'])
 
 def wait_for_status(admin_clients,
                     context,
+                    image_key=None,
                     timeout=60,
                     interval=5,
                     initial_wait=None,
@@ -157,6 +165,8 @@ def wait_for_status(admin_clients,
     :type admin_clients: roletester.clients.ClientManager
     :param context: Pass by reference context object.
     :type context: Dict
+    :param image_key: context[key] to find image_id
+    :type image_key: String
     :param timeout: Timeout in seconds.
     :type timeout: Integer
     :param interval: Time in seconds to wait between polls.
@@ -174,13 +184,21 @@ def wait_for_status(admin_clients,
         time.sleep(initial_wait)
 
     start = time.time()
+    kwargs={}
+    image_status='image_status'
+    if image_key != None:
+        image_status = '_'.join([image_key, 'status'])
+        kwargs={
+            'image_key': image_key,
+            'context_key': image_status
+        }
     try:
         while (time.time() - start < timeout):
-            show(admin_clients, context)
-            status = context['image_status']
+            show(admin_clients, context, **kwargs)
+            status = context[image_status]
             logger.debug("Found status {}".format(status))
             if status == target_status:
-                context.pop('image_status')
+                context.pop(image_status)
                 break
             if status in _DONE_STATUS:
                 raise Exception(

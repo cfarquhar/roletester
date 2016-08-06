@@ -4,7 +4,7 @@ from roletester.log import logging
 logger = logging.getLogger('roletester.actions.neutron.port')
 
 
-def create(clients, context, name):
+def create(clients, context, name='test port'):
     """Create a port
 
     Uses context['network_id']

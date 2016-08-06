@@ -236,7 +236,8 @@ class KeystoneManager(object):
         :type *args: [string]
         :returns: string
         """
-        text = '|'.join(args)
+        sanitized_args = ["%s" % x for x in args]
+        text = '|'.join(sanitized_args)
         (cipher, iv) = self._get_cypher()
         msg = iv + cipher.encrypt(text)
         return msg.encode('hex')
