@@ -19,7 +19,7 @@ def create(clients, context, name="test_user", password="test_pass"):
     :type password: String
     """
 
-    logger.info("Taking action user.create {}.".format(name))
+    logger.debug("Taking action user.create {}.".format(name))
     keystone = clients.get_keystone()
     user = keystone.users.create(name, domain="Default", password="test")
     context.update({'user': user})
@@ -39,7 +39,7 @@ def delete(clients, context):
 
     user = context['user']
 
-    logger.info("Taking action user.delete {}.".format(user.name))
+    logger.debug("Taking action user.delete {}.".format(user.name))
     keystone = clients.get_keystone()
     keystone.users.delete(user)
 
@@ -59,6 +59,6 @@ def change_name(clients, context, new_name="new_test_user"):
 
     user = context['user']
 
-    logger.info("Taking action user.change_name {}.".format(user.name))
+    logger.debug("Taking action user.change_name {}.".format(user.name))
     keystone = clients.get_keystone()
     keystone.users.update(user, name=new_name)

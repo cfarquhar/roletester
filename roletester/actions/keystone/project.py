@@ -19,7 +19,7 @@ def create(clients, context, name="test_project", domain='Default'):
     :type domain: String
     """
 
-    logger.info("Taking action project.create {}.".format(name))
+    logger.debug("Taking action project.create {}.".format(name))
     keystone = clients.get_keystone()
     project = keystone.projects.create(name, domain)
     context.update({'project': project})
@@ -39,6 +39,6 @@ def delete(clients, context):
 
     project = context['project']
 
-    logger.info("Taking action project.delete {}.".format(project.name))
+    logger.debug("Taking action project.delete {}.".format(project.name))
     keystone = clients.get_keystone()
     keystone.projects.delete(project)

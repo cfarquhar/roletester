@@ -28,10 +28,20 @@ from roletester.actions.neutron import security_group_remove_from_server
 from roletester.actions.neutron import security_group_rule_create
 from roletester.actions.neutron import security_group_delete
 from roletester.actions.neutron import security_group_rule_delete
+from roletester.actions.neutron import floatingip_associate
+from roletester.actions.neutron import floatingip_create
+from roletester.actions.neutron import floatingip_delete
+from roletester.actions.neutron import floatingip_disassociate
+from roletester.actions.neutron import floatingip_show
+from roletester.actions.neutron import port_create
+from roletester.actions.neutron import port_delete
+from roletester.actions.neutron import port_show
+from roletester.actions.neutron import port_update
 from roletester.exc import NovaNotFound
 from roletester.exc import GlanceNotFound
 from roletester.exc import GlanceUnauthorized
 from roletester.exc import KeystoneUnauthorized
+from neutronclient.common.exceptions import NetworkNotFoundClient
 from roletester.scenario import ScenarioFactory as Factory
 from roletester.utils import randomname
 
@@ -81,11 +91,15 @@ class SampleFactory(Factory):
     SECURITY_GROUP_ADD_TO_SERVER = 11
     SECURITY_GROUP_REMOVE_FROM_SERVER = 12
     SECURITY_GROUP_RULE_DELETE = 13
-    SERVER_DELETE = 14
+    SECURITY_GROUP_DELETE = 14
     SERVER_DELETE = 15
     ROUTER_CREATE = 16
     ROUTER_SHOW = 17
     ROUTER_ADD_INTERFACE = 18
+    ROUTER_REMOVE_INTERFACE = 19
+    ROUTER_DELETE = 20
+    SUBNET_DELETE = 21
+    NETWORK_DELETE = 22
 
 class SecgroupAddFactory(Factory):
 
@@ -187,6 +201,20 @@ class NetworkDeleteFactory(Factory):
     
     NETWORK_CREATE = 0
     NETWORK_DELETE = 1
+    
+class FloatingIPFactory(Factory):
+    _ACTIONS = [
+        network_create,
+        subnet_create,
+        port_create,
+        router_create,
+        router_add_interface,
+        floatingip_create,
+        floatingip_show,
+        floatingip_associate,
+        floatingip_disassociate,
+        floatingip_delete,
+    ]
 
 class TestSample(BaseTestCase):
 
@@ -194,15 +222,33 @@ class TestSample(BaseTestCase):
     flavor = '1'
     image_file = '/Users/chalupaul/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
-    
 
-
+    def setUp(self):
+        super(TestSample, self).setUp()
+        try:
+            n = self.km.admin_client_manager.get_neutron()
+            networks = n.list_networks()['networks']
+            public_network = [x['id'] 
+                              for x in networks 
+                              if x['router:external'] == True][0]
+        except IndexError:
+            err_str = "No public network found to create floating ips from."
+            raise NetworkNotFoundClient(message=err_str)
+        self.context["external_network_id"] = public_network
+        
+        
     def test_cloud_admin_all(self):
         cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
         
         SampleFactory(cloud_admin) \
             .set(SampleFactory.IMAGE_CREATE,  
                  args=(self.image_file,)) \
+            .produce() \
+            .run(context=self.context)
+
+    def _test_cloud_admin_floatingip(self):
+        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
+        FloatingIPFactory(cloud_admin) \
             .produce() \
             .run(context=self.context)
 
@@ -234,6 +280,27 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.ROUTER_CREATE,
                  clients=user1) \
             .set(SampleFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+    def _test_cloud_admin_same_domain_different_user_floatingip(self):
+        creator = self.km.find_user_credentials('Default', self.project, 'admin')
+        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
+        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
+
+        FloatingIPFactory(cloud_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 client=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
                  clients=user1) \
             .produce() \
             .run(context=self.context)

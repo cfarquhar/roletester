@@ -27,22 +27,27 @@ def associate(clients, context):
     neutron.update_floatingip(floatingip_id, body=body)
 
 
-def create(clients, context, floating_network_id, project_id=None):
+def create(clients, context):
     """Create a floatingip
 
     Sets context['floatingip_id']
+    Uses context['external_network_id] (Required)
+    Uses context['project_id'] (Optional)
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
     :type context: Dict
-    :param floating_network_id: id of the floating network
-    :type name: String
-    :param project_id: Optional id of another tenant/project
-    :type project_id: String
     """
     logger.info("Taking action floatingip.create.")
     neutron = clients.get_neutron()
+    networks = neutron.list_networks()['networks']
+    floating_network_id = context['external_network_id']
+    if 'project_id' in context:
+        project_id = context['project_id']
+    else:
+        project_id = None
+    
     body = {
         "floatingip": {
             "floating_network_id": floating_network_id

@@ -4,6 +4,7 @@ from glanceclient.exc import Unauthorized as GlanceUnauthorized
 from keystoneauth1.exceptions.http import Unauthorized as KeystoneUnauthorized
 from neutronclient.common.exceptions import NotFound as NeutronNotFound
 from novaclient.exceptions import NotFound as NovaNotFound
+from swiftclient.client import ClientException as SwiftClientException
 
 __all__ = [
     'CinderNotFound',
@@ -11,5 +12,6 @@ __all__ = [
     'GlanceUnauthorized',
     'NeutronNotFound',
     'KeystoneUnauthorized',
-    'NovaNotFound'
+    'NovaNotFound',
+    'SwiftClientException'
 ]

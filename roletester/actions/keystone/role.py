@@ -48,7 +48,7 @@ def grant_user_project(clients, context, role="_member_"):
     user = context['user']
     project = context['project']
 
-    logger.info("Taking action role.grant_user_project {}.".format(user.name))
+    logger.debug("Taking action role.grant_user_project {}.".format(user.name))
     keystone = clients.get_keystone()
     role_uuid = _get_role_uuid_by_name(keystone, role)
     keystone.roles.grant(role_uuid, user=user, project=project)
@@ -73,8 +73,7 @@ def revoke_user_project(clients, context):
     project = context['project']
     role_uuid = context['role']
 
-    logger.info("Taking action role.revoke_user_project {}.".format(user.name))
+    logger.debug("Taking action role.revoke_user_project {}.".format(user.name))
     keystone = clients.get_keystone()
     keystone.roles.revoke(role_uuid, user=user, project=project)
 
-    context.pop('role')
