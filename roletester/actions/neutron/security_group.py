@@ -102,7 +102,7 @@ def create(clients, context, name='test secgroup', description=None):
     security_group = resp['security_group']
     context.update(security_group_name=security_group['name'])
     context.update(security_group_id=security_group['id'])
-    context.setdefault('stacks', []).append(
+    context.setdefault('stack', []).append(
         {'security_group_id': security_group['id']}
     )
 

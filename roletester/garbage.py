@@ -16,7 +16,6 @@ from roletester.actions.neutron import port_delete
 from roletester.actions.neutron import router_delete
 from roletester.actions.neutron import security_group_delete
 from roletester.actions.neutron import security_group_rule_delete
-from roletester.actions.neutron import security_group_remove_from_server
 from roletester.actions.neutron import subnet_delete
 from roletester.actions.nova import server_delete
 from roletester.actions.nova import server_wait_for_status
@@ -49,7 +48,6 @@ class Collector(object):
             'router_id': Scenario().chain(router_delete, clients),
 
             'security_group_id': Scenario()
-            .chain(security_group_remove_from_server, clients) \
             .chain(security_group_delete, clients),
 
             'security_group_rule_id': Scenario()
