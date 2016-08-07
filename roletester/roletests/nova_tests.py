@@ -26,7 +26,7 @@ from roletester.utils import randomname
 
 from roletester.log import logging
 
-logger = logging.getLogger("roletester.test_sample")
+logger = logging.getLogger("roletester.nova")
 
 
 class SampleFactory(Factory):

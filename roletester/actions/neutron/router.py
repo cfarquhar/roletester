@@ -24,7 +24,7 @@ def add_interface(clients, context):
     neutron.add_interface_router(router_id, body=body)
 
 
-def create(clients, context, name, external_network_id):
+def create(clients, context, name='test router', external_network_id=None):
     """Create a router
 
     Sets context['router_id']
@@ -43,11 +43,13 @@ def create(clients, context, name, external_network_id):
     body = {
         "router": {
             "name": name,
-            "external_gateway_info": {
-                "network_id": external_network_id
-            }
+            "external_gateway_info": {}
         }
     }
+    if external_network_id != None:
+        body["router"]["external_gateway_info"] = {
+             "network_id": external_network_id
+        }
     resp = neutron.create_router(body=body)
     router = resp['router']
     context['router_id'] = router['id']

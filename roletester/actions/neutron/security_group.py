@@ -4,6 +4,43 @@ from roletester.log import logging
 logger = logging.getLogger('roletester.actions.neutron.security_group')
 
 
+def _manage_server_security_group(clients, context, direction):
+    """add/remove security group from server
+    
+    Uses context['server_id']
+    Uses context['security_group_id']
+    
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param direction: add|remove
+    :type direction: String
+    """
+    server_id = context['server_id']
+    neutron = clients.get_neutron()
+
+    resp = neutron.list_ports(device_id=server_id)
+
+    security_group_id = context['security_group_id']
+    port_id = resp['ports'][0]['id']
+    security_groups = resp['ports'][0]['security_groups']
+    if direction == 'add':
+        security_groups.append(security_group_id)
+    elif direction == 'remove':
+        security_groups = [x 
+                           for x in security_groups
+                           if x != security_group_id]
+    else:
+        raise ValueError('security group direction must be `add` or `remove`')
+
+    body = {
+        'port': {
+            'security_groups': security_groups
+        }
+    }
+    resp = neutron.update_port(port_id, body)
+
 def add_to_server(clients, context):
     """Add security group to server
 
@@ -17,26 +54,26 @@ def add_to_server(clients, context):
     :param context: Pass by reference object
     :type context: Dict
     """
-    logger.info("Taking action security_group.add_to_server")
-    server_id = context['server_id']
-    neutron = clients.get_neutron()
+    logger.debug("Taking action security_group.add_to_server")
+    _manage_server_security_group(clients, context, 'add')
 
-    resp = neutron.list_ports(device_id=server_id)
+def remove_from_server(clients, context):
+    """Removes a security group from server.
+    
+    Finds the first port with matching server id
+    
+    Uses context['server_id']
+    Uses context['security_group_id']
+    
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    """
+    logger.debug("Taking action security_group.remove_from_server")
+    _manage_server_security_group(clients, context, 'remove')
 
-    security_group_id = context['security_group_id']
-    port_id = resp['ports'][0]['id']
-    security_groups = resp['ports'][0]['security_groups']
-    security_groups.append(security_group_id)
-
-    body = {
-        'port': {
-            'security_groups': security_groups
-        }
-    }
-    resp = neutron.update_port(port_id, body)
-
-
-def create(clients, context, name, description=None):
+def create(clients, context, name='test secgroup', description=None):
     """Create a security group.
 
     Sets context['security_group_id']
@@ -51,7 +88,7 @@ def create(clients, context, name, description=None):
     :param description: Description of the group.
     :type description: String
     """
-    logger.info("Taking action security_group.create")
+    logger.debug("Taking action security_group.create")
     body = {
         'security_group': {
             'name': name
@@ -82,7 +119,7 @@ def delete(clients, context):
     :param context: Pass by reference object.
     :type context: Dict
     """
-    logger.info("Taking action security_group.delete")
+    logger.debug("Taking action security_group.delete")
     neutron = clients.get_neutron()
     security_group_id = context['security_group_id']
     neutron.delete_security_group(security_group_id)
@@ -98,7 +135,7 @@ def list(clients, context):
     :param context: Pass by reference object.
     :type context: Dict
     """
-    logger.info("Taking action security_group.list")
+    logger.debug("Taking action security_group.list")
     neutron = clients.get_neutron()
     groups = neutron.list_security_groups()
     context.update({'security_groups': groups})
@@ -114,7 +151,7 @@ def show(clients, context):
     :param context: Pass by reference object.
     :type context: Dict
     """
-    logger.info("Taking action security_group.show")
+    logger.debug("Taking action security_group.show")
     neutron = clients.get_neutron()
     group = neutron.show_security_group(context['security_group_id'])
     context.update({'security_group': group})
@@ -134,7 +171,7 @@ def update(clients, context, name=None, description=None):
     :param description: New description of the security group.
     :type description: String
     """
-    logger.info("Taking action security_group_update")
+    logger.debug("Taking action security_group_update")
     neutron = clients.get_neutron()
 
     body = {'security_group': {}}
