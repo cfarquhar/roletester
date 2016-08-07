@@ -16,14 +16,14 @@ def create(clients, context, size=1):
     :param size: Volume size in GB
     :type size: int
     """
-    logger.info("Taking action create")
+    logger.debug("Taking action create")
     cinder = clients.get_cinder()
     name = utils.randomname(prefix='random-volume')
     meta = {'app': 'roletester'}
     volume = cinder.volumes.create(name=name, size=size, metadata=meta)
     context.update({'volume_id': volume.id})
     context.setdefault('stack', []).append({'volume_id': volume.id})
-    logger.info("Created volume {0} with metadata {1}"
+    logger.debug("Created volume {0} with metadata {1}"
                 .format(volume.name, volume.metadata))
 
 
@@ -37,13 +37,13 @@ def delete(clients, context):
     :param context: Pass by reference object
     :type context: Dict
     """
-    logger.info("Taking action delete")
+    logger.debug("Taking action delete")
     cinder = clients.get_cinder()
 
     volume = cinder.volumes.get(context['volume_id'])
     cinder.volumes.delete(volume)
     context.pop('volume_id')
-    logger.info("Deleted volume {0} - {1} - {2}"
+    logger.debug("Deleted volume {0} - {1} - {2}"
                 .format(volume.name, volume.size, volume.metadata))
 
 
@@ -55,11 +55,11 @@ def list(clients, context):
     :param context: Pass by reference object
     :type context: Dict
     """
-    logger.info("Listing active volumes")
+    logger.debug("Listing active volumes")
     cinder = clients.get_cinder()
     volumes = cinder.volumes.list()
     for v in volumes:
-        logger.info("{0} - {1}".format(v.name, v.metadata))
+        logger.debug("{0} - {1}".format(v.name, v.metadata))
 
 
 def show(clients, context):
@@ -73,11 +73,28 @@ def show(clients, context):
     :param context: Pass by reference context object.
     :type context: Dict
     """
-    logger.info("Taking action volume.show")
+    logger.debug("Taking action volume.show")
     cinder = clients.get_cinder()
     volume_id = context['volume_id']
     volume = cinder.volumes.get(volume_id)
     context.update(volume_status=volume.status.lower())
+
+def update(clients, context):
+    """Updates cinder volume metadata.
+    
+    Uses context['volume_id']
+
+    :param clients: Client manager
+    :type clients: roletester.clientns.ClientManager
+    :param context: Pass by reference context object.
+    :type context: Dict
+    """
+    logger.debug("Taking action volume.update")
+    cinder = clients.get_cinder()
+    volume_id = context['volume_id']
+    meta = {"updated": "test metadata"}
+    cinder.volumes.set_metadata(volume_id, meta)
+    logger.debug("Metadata updated for volume %s" % volume_id)
 
 
 def attach(clients, context, mountpoint='/u01'):
@@ -93,7 +110,7 @@ def attach(clients, context, mountpoint='/u01'):
     """
     volume_id = context['volume_id']
     server_id = context['server_id']
-    logger.info("Attaching volume %s to %s" % (volume_id, server_id))
+    logger.debug("Attaching volume %s to %s" % (volume_id, server_id))
     volume = clients.get_cinder().volumes.get(volume_id)
     volume.attach(server_id, mountpoint)
 
@@ -109,7 +126,7 @@ def detach(clients, context):
     :type context: Dict
     """
     volume_id = context['volume_id']
-    logger.info("Detaching volume %s" % volume_id)
+    logger.debug("Detaching volume %s" % volume_id)
     volume = clients.get_cinder().volumes.get(volume_id)
     volume.detach()
 
@@ -136,7 +153,7 @@ def create_image(clients,
     :type disk_format: String
     """
     volume_id = context['volume_id']
-    logger.info("Creating image from %s" % volume_id)
+    logger.debug("Creating image from %s" % volume_id)
     volume = clients.get_cinder().volumes.get(volume_id)
     resp = volume.upload_to_image(False,
                                   name,
@@ -181,7 +198,7 @@ def wait_for_status(admin_clients,
         a NotFoundException will be allowed.
     :type target_status: String
     """
-    logger.info("Taking action wait for volume")
+    logger.debug("Taking action wait for volume")
 
     if initial_wait:
         time.sleep(initial_wait)

@@ -43,7 +43,7 @@ class TestSample(BaseTestCase):
 
 
     def test_cloud_admin_all(self):
-        cloud_admin = self.km.find_user_credentials('Default', project, 'admin')
+        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
         
         SampleFactory(cloud_admin) \
             .set(SampleFactory.IMAGE_CREATE,  
@@ -52,8 +52,8 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
         
     def test_cloud_admin_same_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', project, '_member_')
-        cloud_admin = self.km.find_user_credentials('Default', project, 'admin')
+        creator = self.km.find_user_credentials('Default', self.project, '_member_')
+        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
         
         SampleFactory(cloud_admin) \
             .set(SampleFactory.IMAGE_CREATE, 
@@ -64,8 +64,8 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
             
     def test_cloud_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', project, '_member_')
-        cloud_admin = self.km.find_user_credentials('Default', project, 'admin') #TODO: Should pass with with Domain2
+        creator = self.km.find_user_credentials('Default', self.project, '_member_')
+        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin') #TODO: Should pass with with Domain2
         
         SampleFactory(cloud_admin) \
             .set(SampleFactory.IMAGE_CREATE, 
@@ -76,7 +76,7 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
             
     def test_bu_admin_all(self):
-        bu_admin = self.km.find_user_credentials('Default', project, 'admin')
+        bu_admin = self.km.find_user_credentials('Default', self.project, 'admin')
         
         SampleFactory(bu_admin) \
             .set(SampleFactory.IMAGE_CREATE,  
@@ -85,8 +85,8 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
             
     def test_bu_admin_same_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', project, '_member_')
-        bu_admin = self.km.find_user_credentials('Default', project, 'bu_admin')
+        creator = self.km.find_user_credentials('Default', self.project, '_member_')
+        bu_admin = self.km.find_user_credentials('Default', self.project, 'bu_admin')
         
         SampleFactory(bu_admin) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -97,8 +97,8 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
 
     def test_bu_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', project, '_member_')
-        bu_admin = self.km.find_user_credentials('Domain2', project, 'admin')
+        creator = self.km.find_user_credentials('Default', self.project, '_member_')
+        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin')
         
         SampleFactory(bu_admin) \
             .set(SampleFactory.IMAGE_CREATE,
