@@ -30,7 +30,6 @@ def delete(clients, context):
     """Delete an existing keystone user
 
     Uses context['user']
-    Removes context['user']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -39,7 +38,6 @@ def delete(clients, context):
     """
 
     user = context['user']
-    context.pop('user')
 
     logger.info("Taking action user.delete {}.".format(user.name))
     keystone = clients.get_keystone()

@@ -36,7 +36,6 @@ def delete(clients, context):
     """Deletes a port.
 
     Uses context['port_id']
-    Removes context['port_id']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -47,7 +46,6 @@ def delete(clients, context):
     logger.info("Taking action port.delete {}".format(port_id))
     neutron = clients.get_neutron()
     neutron.delete_port(port_id)
-    context.pop('port_id')
 
 
 def show(clients, context):

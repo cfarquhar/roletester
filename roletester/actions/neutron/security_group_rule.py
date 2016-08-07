@@ -65,4 +65,3 @@ def delete(clients, context):
     neutron = clients.get_neutron()
     security_group_rule_id = context['security_group_rule_id']
     neutron.delete_security_group_rule(security_group_rule_id)
-    context.pop('security_group_rule_id')

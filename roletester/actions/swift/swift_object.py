@@ -39,7 +39,6 @@ def delete(clients, context):
 
     Uses context['container_name']
     Uses context['object_name']
-    Removes context['object_name']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -53,8 +52,6 @@ def delete(clients, context):
 
     swift = clients.get_swift()
     swift.delete_object(container, obj_name)
-
-    context.pop('object_name')
 
 
 def get(clients, context):

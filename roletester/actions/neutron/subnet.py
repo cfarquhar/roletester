@@ -45,7 +45,6 @@ def delete(clients, context):
     """Deletes a subnet.
 
     Uses context['subnet_id']
-    Removes context['subnet_id']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager

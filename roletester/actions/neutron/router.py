@@ -60,7 +60,6 @@ def delete(clients, context):
     """Deletes a router.
 
     Uses context['router_id']
-    Removes context['router_id']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -71,7 +70,6 @@ def delete(clients, context):
     logger.info("Taking action router.delete {}".format(router_id))
     neutron = clients.get_neutron()
     neutron.delete_router(router_id)
-    context.pop('router_id')
 
 
 def remove_interface(clients, context):

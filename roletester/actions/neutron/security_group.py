@@ -111,8 +111,6 @@ def delete(clients, context):
     """Deletes a security group.
 
     Uses context['security_group_id']
-    Deletes context['security_group_id']
-    Deletes context['security_group_name']
 
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
@@ -123,8 +121,6 @@ def delete(clients, context):
     neutron = clients.get_neutron()
     security_group_id = context['security_group_id']
     neutron.delete_security_group(security_group_id)
-    context.pop('security_group_name')
-    context.pop('security_group_id')
 
 
 def list(clients, context):

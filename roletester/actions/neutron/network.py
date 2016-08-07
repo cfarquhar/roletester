@@ -38,7 +38,6 @@ def delete(clients, context):
     """Deletes a network.
 
     Uses context['network_id']
-    Removes context['network_id']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -49,7 +48,6 @@ def delete(clients, context):
     logger.info("Taking action network.delete {}".format(network_id))
     neutron = clients.get_neutron()
     neutron.delete_network(network_id)
-    context.pop('network_id')
 
 
 def show(clients, context):

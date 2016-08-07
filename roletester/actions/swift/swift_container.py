@@ -29,7 +29,6 @@ def delete(clients, context):
     """Deletes a container.
 
     Uses context['container_name']
-    Removes context['container_name']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -40,7 +39,6 @@ def delete(clients, context):
     logger.info("Taking action container.delete {}.".format(name))
     swift = clients.get_swift()
     swift.delete_container(name)
-    context.pop('container_name')
 
 
 def get(clients, context):

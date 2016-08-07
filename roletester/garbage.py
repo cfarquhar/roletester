@@ -16,8 +16,10 @@ from roletester.actions.neutron import port_delete
 from roletester.actions.neutron import router_delete
 from roletester.actions.neutron import security_group_delete
 from roletester.actions.neutron import security_group_rule_delete
+from roletester.actions.neutron import security_group_remove_from_server
 from roletester.actions.neutron import subnet_delete
 from roletester.actions.nova import server_delete
+from roletester.actions.nova import server_wait_for_status
 from roletester.actions.swift import swift_container_delete
 from roletester.actions.swift import swift_object_delete
 
@@ -47,12 +49,14 @@ class Collector(object):
             'router_id': Scenario().chain(router_delete, clients),
 
             'security_group_id': Scenario()
+            .chain(security_group_remove_from_server, clients) \
             .chain(security_group_delete, clients),
 
             'security_group_rule_id': Scenario()
             .chain(security_group_rule_delete, clients),
 
-            'server_id': Scenario().chain(server_delete, clients),
+            'server_id': Scenario().chain(server_delete, clients) \
+            .chain(server_wait_for_status, clients, target_status='DELETED', initial_wait=5),
             'subnet_id': Scenario().chain(subnet_delete, clients),
 
             'volume_id': Scenario()

@@ -42,7 +42,6 @@ def delete(clients, context):
 
     volume = cinder.volumes.get(context['volume_id'])
     cinder.volumes.delete(volume)
-    context.pop('volume_id')
     logger.debug("Deleted volume {0} - {1} - {2}"
                 .format(volume.name, volume.size, volume.metadata))
 

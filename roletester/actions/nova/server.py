@@ -53,7 +53,6 @@ def delete(clients, context):
     nova = clients.get_nova()
     server_id = context['server_id']
     logger.info("Deleting {0} ...".format(server_id))
-    context.pop('server_id')
     nova.servers.delete(server_id)
 
 def update(clients, context, meta={"test-key": "modified-test-value"}):

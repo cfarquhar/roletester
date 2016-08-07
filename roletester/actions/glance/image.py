@@ -76,15 +76,11 @@ def delete(clients, context, image_key=None):
         logger.debug("Deleting image %s" % image.id)
         glance.images.delete(image.id)
         logger.debug("Deleted image %s" % image.id)
-    pop_key = False
     if image_key is None:
         image_id = context['image_id']
-        pop_key = True
     else:
         image_id = context[image_key]
     delete_image(image_id)
-    if pop_key:
-        context.pop('image_id')
     logger.debug(context)
 
 

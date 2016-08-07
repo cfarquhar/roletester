@@ -60,7 +60,6 @@ def delete(clients, context):
     """Deletes a floatingip.
 
     Uses context['floatingip_id']
-    Removes context['floatingip_id']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -71,7 +70,6 @@ def delete(clients, context):
     logger.info("Taking action floatingip.delete {}".format(floatingip_id))
     neutron = clients.get_neutron()
     neutron.delete_floatingip(floatingip_id)
-    context.pop('floatingip_id')
 
 
 def disassociate(clients, context):
