@@ -1,12 +1,6 @@
-from args import parser as argparser
-from clients import ClientManager
-import config
 from log import logging
-import time
-import utils
 from keystone_manager import KeystoneManager
 
-from clients import ClientManager
 from actions.nova import delete as server_delete
 from actions.nova import create as server_create
 from scenario import Scenario
@@ -42,11 +36,11 @@ demo_clients = km.find_user_credentials('Default', 'demo', 'member')
 # Create then delete
 logger.debug("\n\nClassic create then delete")
 flavor = '1'
-image  = '94f3805c-f59c-4dca-9cfe-40edf001c256'
+image = '94f3805c-f59c-4dca-9cfe-40edf001c256'
 name = 'scenario_test'
 scenario = Scenario() \
-        .chain(server_create, admin_clients, name, flavor, image) \
-        .chain(server_delete, admin_clients)
+    .chain(server_create, admin_clients, name, flavor, image) \
+    .chain(server_delete, admin_clients)
 
 state = {}
 scenario.run(state)
@@ -65,7 +59,7 @@ scenario = Scenario() \
 scenario.run()
 
 # Delete not found with no expected exceptions
-#logger.debug("\n\nDelete not found without expected")
-#scenario = Scenario() \
-#        .chain(server_delete, admin_clients)
-#scenario.run(context={'server_id': '94f3805c-f59c-4dca-9cfe-40edf001c252'})
+# logger.debug("\n\nDelete not found without expected")
+# scenario = Scenario() \
+#         .chain(server_delete, admin_clients)
+# scenario.run(context={'server_id': '94f3805c-f59c-4dca-9cfe-40edf001c252'})

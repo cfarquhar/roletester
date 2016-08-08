@@ -22,7 +22,8 @@ from router import show as router_show
 from router import update as router_update
 
 from security_group import add_to_server as security_group_add_to_server
-from security_group import remove_from_server as security_group_remove_from_server
+from security_group import remove_from_server \
+    as security_group_remove_from_server
 from security_group import create as security_group_create
 from security_group import delete as security_group_delete
 from security_group import list as security_group_list

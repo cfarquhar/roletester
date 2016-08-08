@@ -73,6 +73,8 @@ def revoke_user_project(clients, context):
     project = context['project_obj']
     role_uuid = context['role']
 
-    logger.debug("Taking action role.revoke_user_project {}.".format(user.name))
+    logger.debug(
+        "Taking action role.revoke_user_project {}.".format(user.name)
+    )
     keystone = clients.get_keystone()
     keystone.roles.revoke(role_uuid, user=user, project=project)

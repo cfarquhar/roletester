@@ -6,10 +6,10 @@ logger = logging.getLogger('roletester.actions.neutron.security_group')
 
 def _manage_server_security_group(clients, context, direction):
     """add/remove security group from server
-    
+
     Uses context['server_id']
     Uses context['security_group_id']
-    
+
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
@@ -28,7 +28,7 @@ def _manage_server_security_group(clients, context, direction):
     if direction == 'add':
         security_groups.append(security_group_id)
     elif direction == 'remove':
-        security_groups = [x 
+        security_groups = [x
                            for x in security_groups
                            if x != security_group_id]
     else:
@@ -40,6 +40,7 @@ def _manage_server_security_group(clients, context, direction):
         }
     }
     resp = neutron.update_port(port_id, body)
+
 
 def add_to_server(clients, context):
     """Add security group to server
@@ -57,14 +58,15 @@ def add_to_server(clients, context):
     logger.debug("Taking action security_group.add_to_server")
     _manage_server_security_group(clients, context, 'add')
 
+
 def remove_from_server(clients, context):
     """Removes a security group from server.
-    
+
     Finds the first port with matching server id
-    
+
     Uses context['server_id']
     Uses context['security_group_id']
-    
+
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
@@ -72,6 +74,7 @@ def remove_from_server(clients, context):
     """
     logger.debug("Taking action security_group.remove_from_server")
     _manage_server_security_group(clients, context, 'remove')
+
 
 def create(clients, context, name='test secgroup', description=None):
     """Create a security group.

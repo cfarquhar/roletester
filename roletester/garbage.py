@@ -56,14 +56,20 @@ class Collector(object):
             'security_group_rule_id': Scenario()
             .chain(security_group_rule_delete, clients),
 
-            'server_id': Scenario().chain(server_delete, clients) \
-            .chain(server_wait_for_status, clients, target_status='DELETED', initial_wait=5),
+            'server_id': Scenario().chain(server_delete, clients)
+            .chain(
+                server_wait_for_status,
+                clients,
+                target_status='DELETED',
+                initial_wait=5
+            ),
+
             'subnet_id': Scenario().chain(subnet_delete, clients),
 
             'volume_id': Scenario()
             .chain(volume_wait_for_status, clients)
             .chain(volume_delete, clients),
-            
+
             'volume_attachment_id': Scenario()
             .chain(volume_detach, clients),
 
@@ -72,7 +78,7 @@ class Collector(object):
 
             'user_obj': Scenario()
             .chain(user_delete, clients),
-            
+
             'router_subnet_mdx': Scenario()
             .chain(router_remove_interface, clients)
         }

@@ -51,9 +51,9 @@ def create(clients, context, name='test router'):
             "external_gateway_info": {}
         }
     }
-    if external_network_id != None:
+    if external_network_id is not None:
         body["router"]["external_gateway_info"] = {
-             "network_id": external_network_id
+            "network_id": external_network_id
         }
     resp = neutron.create_router(body=body)
     router = resp['router']

@@ -1,7 +1,6 @@
 import time
 from roletester.exc import GlanceNotFound
 from roletester.log import logging
-import time
 
 logger = logging.getLogger('roletester.actions.glance.image')
 
@@ -125,9 +124,10 @@ def list(clients, context):
     log_template = "Images listing: " + ', '.join(["\"%s\""] * len(images))
     logger.debug(log_template % tuple(images))
 
+
 def update(clients, context):
     """Updates glance metadata
-    
+
      Uses context['image_id']
 
     :param clients: Client manager
@@ -180,11 +180,11 @@ def wait_for_status(admin_clients,
         time.sleep(initial_wait)
 
     start = time.time()
-    kwargs={}
-    image_status='image_status'
-    if image_key != None:
+    kwargs = {}
+    image_status = 'image_status'
+    if image_key is not None:
         image_status = '_'.join([image_key, 'status'])
-        kwargs={
+        kwargs = {
             'image_key': image_key,
             'context_key': image_status
         }
