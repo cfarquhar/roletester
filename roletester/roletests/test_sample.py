@@ -33,7 +33,7 @@ class TestSample(BaseTestCase):
     flavor = '1'
     image = '94f3805c-f59c-4dca-9cfe-40edf001c256'
 
-    def test_admin_create_admin_delete(self):
+    def _test_admin_create_admin_delete(self):
         """Test that admin can create and delete a server."""
         admin = self.km.find_user_credentials('Default', 'admin', 'admin')
         SampleFactory(admin) \
@@ -41,7 +41,7 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
-    def test_admin_create_demo_delete(self):
+    def _test_admin_create_demo_delete(self):
         """Test that admin can create and demo can delete."""
         admin = self.km.find_user_credentials('Default', 'admin', 'admin')
         demo = self.km.find_user_credentials('Default', 'demo', 'member')

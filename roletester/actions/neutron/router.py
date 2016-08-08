@@ -8,6 +8,9 @@ def add_interface(clients, context):
     """Adds a router interface to a subnet
 
     Uses context['subnet_id']
+    Uses context['router_id']
+
+    Sets context['router_subnet_mdx']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -22,6 +25,9 @@ def add_interface(clients, context):
         "subnet_id": subnet_id
     }
     neutron.add_interface_router(router_id, body=body)
+    context['router_subnet_mdx'] = '|'.join([router_id, subnet_id])
+    context_stack_entry = {'router_subnet_mdx': context['router_subnet_mdx']}
+    context.setdefault('stack', []).append(context_stack_entry)
 
 
 def create(clients, context, name='test router'):
@@ -74,16 +80,14 @@ def delete(clients, context):
 def remove_interface(clients, context):
     """Remove an interface from a router
 
-    Uses context['router_id']
-    Uses context['subnet_id']
+    Uses context['router_subnet_mdx']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
     :type context: Dict
     """
-    router_id = context['router_id']
-    subnet_id = context['subnet_id']
+    (router_id, subnet_id) = context['router_subnet_mdx'].split('|')
     logger.info("Taking action router.remove_interface.")
     neutron = clients.get_neutron()
     body = {

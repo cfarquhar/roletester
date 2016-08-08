@@ -203,6 +203,7 @@ class NetworkDeleteFactory(Factory):
     NETWORK_DELETE = 1
     
 class FloatingIPFactory(Factory):
+
     _ACTIONS = [
         network_create,
         subnet_create,
@@ -215,6 +216,17 @@ class FloatingIPFactory(Factory):
         floatingip_disassociate,
         floatingip_delete,
     ]
+    
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    PORT_CREATE = 2
+    ROUTER_CREATE = 3
+    ROUTER_ADD_INTERFACE = 4
+    FLOATINGIP_CREATE = 5
+    FLOATINGIP_SHOW = 6
+    FLOATINGIP_ASSOCIATE = 7
+    FLOATINGIP_DISASSOCIATE = 8
+    FLOATINGIP_DELETE = 9
 
 class TestSample(BaseTestCase):
 
@@ -246,7 +258,7 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
-    def _test_cloud_admin_floatingip(self):
+    def test_cloud_admin_floatingip(self):
         cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
         FloatingIPFactory(cloud_admin) \
             .produce() \
@@ -284,7 +296,7 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
-    def _test_cloud_admin_same_domain_different_user_floatingip(self):
+    def test_cloud_admin_same_domain_different_user_floatingip(self):
         creator = self.km.find_user_credentials('Default', self.project, 'admin')
         user1 = self.km.find_user_credentials('Default', self.project, '_member_')
         cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
@@ -295,7 +307,7 @@ class TestSample(BaseTestCase):
             .set(FloatingIPFactory.SUBNET_CREATE,
                  clients=user1) \
             .set(FloatingIPFactory.PORT_CREATE,
-                 client=user1) \
+                 clients=user1) \
             .set(FloatingIPFactory.ROUTER_CREATE,
                  clients=user1) \
             .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
@@ -337,6 +349,28 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
             
+    def test_cloud_admin_different_domain_different_user_floatingip(self):
+        creator = self.km.find_user_credentials('Default', self.project, 'admin')
+        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
+        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin') #TODO: Should pass with with Domain2
+        
+        FloatingIPFactory(cloud_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+            
     def test_bu_admin_all(self):
         bu_admin = self.km.find_user_credentials('Default', self.project, 'admin')
         
@@ -345,6 +379,14 @@ class TestSample(BaseTestCase):
                  args=(self.image_file,)) \
             .produce() \
             .run(context=self.context)
+
+            
+    def test_bu_admin_floatingip(self):
+        bu_admin = self.km.find_user_credentials('Default', self.project, 'admin')
+        FloatingIPFactory(bu_admin) \
+            .produce() \
+            .run(context=self.context)
+
             
     def test_bu_admin_same_domain_different_user(self):
         creator = self.km.find_user_credentials('Default', self.project, 'admin')
@@ -377,6 +419,57 @@ class TestSample(BaseTestCase):
                  clients=user1) \
             .produce() \
             .run(context=self.context)
+            
+    def test_bu_admin_same_domain_different_user_floatingip(self):
+        creator = self.km.find_user_credentials('Default', self.project, 'admin')
+        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
+        bu_admin = self.km.find_user_credentials('Default', self.project, 'admin') #TODO: Should pass with with Domain2
+        
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .produce() \
+            .run(context=self.context)
+            
+    def test_bu_admin_different_domain_different_user_floatingip(self):
+        creator = self.km.find_user_credentials('Default', self.project, 'admin')
+        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
+        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin') #TODO: Should pass with with Domain2
+        
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
             
     def test_bu_admin_different_domain_different_user_secgroup_add_to_server(self):
         creator = self.km.find_user_credentials('Default', self.project, 'admin')

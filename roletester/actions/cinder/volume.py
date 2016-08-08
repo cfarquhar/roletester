@@ -101,6 +101,8 @@ def attach(clients, context, mountpoint='/u01'):
 
     Uses context['server_id']
     Uses context['volume_id']
+    
+    Sets context['volume_attachment_id']
 
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
@@ -112,19 +114,22 @@ def attach(clients, context, mountpoint='/u01'):
     logger.debug("Attaching volume %s to %s" % (volume_id, server_id))
     volume = clients.get_cinder().volumes.get(volume_id)
     volume.attach(server_id, mountpoint)
+    context['volume_attachment_id'] = volume.id
+    context.setdefault('stack', []).append({'volume_attachment_id': volume.id})
+    
 
 
 def detach(clients, context):
     """Detaches a volume from a server.
 
-    Uses context['volume_id']
+    Uses context['volume_attachment_id']
 
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
     :param context: Pass by reference object
     :type context: Dict
     """
-    volume_id = context['volume_id']
+    volume_id = context['volume_attachment_id']
     logger.debug("Detaching volume %s" % volume_id)
     volume = clients.get_cinder().volumes.get(volume_id)
     volume.detach()
