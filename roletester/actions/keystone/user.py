@@ -1,5 +1,6 @@
 """Module containing actions to manage keystone users."""
 from roletester.log import logging
+from roletester.exc import KeystoneNotFound
 
 logger = logging.getLogger('roletester.actions.keystone.user')
 
@@ -7,7 +8,7 @@ logger = logging.getLogger('roletester.actions.keystone.user')
 def create(clients, context, name="test_user", password="test_pass"):
     """Create a new keystone user
 
-    Sets context['user']
+    Sets context['user_obj']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -22,14 +23,14 @@ def create(clients, context, name="test_user", password="test_pass"):
     logger.debug("Taking action user.create {}.".format(name))
     keystone = clients.get_keystone()
     user = keystone.users.create(name, domain="Default", password="test")
-    context.update({'user': user})
+    context.update({'user_obj': user})
     context.setdefault('stack', []).append({'user_obj': user})
 
 
 def delete(clients, context):
     """Delete an existing keystone user
 
-    Uses context['user']
+    Uses context['user_obj']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -37,17 +38,20 @@ def delete(clients, context):
     :type context: Dict
     """
 
-    user = context['user']
+    user = context['user_obj']
 
     logger.debug("Taking action user.delete {}.".format(user.name))
     keystone = clients.get_keystone()
-    keystone.users.delete(user)
+    try:
+        keystone.users.delete(user)
+    except KeystoneNotFound:
+        pass
 
 
 def change_name(clients, context, new_name="new_test_user"):
     """Changes the name of an existing keystone user
 
-    Uses context['user']
+    Uses context['user_obj']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -57,7 +61,7 @@ def change_name(clients, context, new_name="new_test_user"):
     :type new_name: String
     """
 
-    user = context['user']
+    user = context['user_obj']
 
     logger.debug("Taking action user.change_name {}.".format(user.name))
     keystone = clients.get_keystone()

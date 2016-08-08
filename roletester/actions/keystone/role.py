@@ -33,8 +33,8 @@ def _get_role_uuid_by_name(keystone, name):
 def grant_user_project(clients, context, role="_member_"):
     """Grant a role to (user,project)
 
-    Uses context['user']
-    Uses context['project']
+    Uses context['user_obj']
+    Uses context['project_obj']
     Sets context['role']
 
     :param clients: Client Manager
@@ -45,8 +45,8 @@ def grant_user_project(clients, context, role="_member_"):
     :type role: String
     """
 
-    user = context['user']
-    project = context['project']
+    user = context['user_obj']
+    project = context['project_obj']
 
     logger.debug("Taking action role.grant_user_project {}.".format(user.name))
     keystone = clients.get_keystone()
@@ -58,8 +58,8 @@ def grant_user_project(clients, context, role="_member_"):
 def revoke_user_project(clients, context):
     """Revokes a role from (user, project)
 
-    Uses context['user']
-    Uses context['project']
+    Uses context['user_obj']
+    Uses context['project_obj']
     Uses context['role']
     Removes context['role']
 
@@ -69,11 +69,10 @@ def revoke_user_project(clients, context):
     :type context: Dict
     """
 
-    user = context['user']
-    project = context['project']
+    user = context['user_obj']
+    project = context['project_obj']
     role_uuid = context['role']
 
     logger.debug("Taking action role.revoke_user_project {}.".format(user.name))
     keystone = clients.get_keystone()
     keystone.roles.revoke(role_uuid, user=user, project=project)
-

@@ -1,5 +1,6 @@
 """Module containing actions to manage keystone projects."""
 from roletester.log import logging
+from roletester.exc import KeystoneNotFound
 
 logger = logging.getLogger('roletester.actions.keystone.project')
 
@@ -7,7 +8,7 @@ logger = logging.getLogger('roletester.actions.keystone.project')
 def create(clients, context, name="test_project", domain='Default'):
     """Create a new keystone project
 
-    Sets context['project']
+    Sets context['project_obj']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -22,14 +23,14 @@ def create(clients, context, name="test_project", domain='Default'):
     logger.debug("Taking action project.create {}.".format(name))
     keystone = clients.get_keystone()
     project = keystone.projects.create(name, domain)
-    context.update({'project': project})
+    context.update({'project_obj': project})
     context.setdefault('stack', []).append({'project_obj': project})
 
 
 def delete(clients, context):
     """Delete an existing keystone project
 
-    Uses context['project']
+    Uses context['project_obj']
 
     :param clients: Client Manager
     :type clients: roletester.clients.ClientManager
@@ -37,8 +38,13 @@ def delete(clients, context):
     :type context: Dict
     """
 
-    project = context['project']
+    logger.debug("My context: {}".format(context))
+    project = context['project_obj']
+    context.pop('project_obj')
 
     logger.debug("Taking action project.delete {}.".format(project.name))
     keystone = clients.get_keystone()
-    keystone.projects.delete(project)
+    try:
+        keystone.projects.delete(project)
+    except KeystoneNotFound:
+        pass
