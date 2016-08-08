@@ -23,8 +23,10 @@ def create(clients, context, size=1):
     volume = cinder.volumes.create(name=name, size=size, metadata=meta)
     context.update({'volume_id': volume.id})
     context.setdefault('stack', []).append({'volume_id': volume.id})
-    logger.debug("Created volume {0} with metadata {1}"
-                .format(volume.name, volume.metadata))
+    logger.debug(
+        "Created volume {0} with metadata {1}"
+        .format(volume.name, volume.metadata)
+    )
 
 
 def delete(clients, context):
@@ -42,8 +44,10 @@ def delete(clients, context):
 
     volume = cinder.volumes.get(context['volume_id'])
     cinder.volumes.delete(volume)
-    logger.debug("Deleted volume {0} - {1} - {2}"
-                .format(volume.name, volume.size, volume.metadata))
+    logger.debug(
+        "Deleted volume {0} - {1} - {2}"
+        .format(volume.name, volume.size, volume.metadata)
+    )
 
 
 def list(clients, context):
@@ -78,9 +82,10 @@ def show(clients, context):
     volume = cinder.volumes.get(volume_id)
     context.update(volume_status=volume.status.lower())
 
+
 def update(clients, context):
     """Updates cinder volume metadata.
-    
+
     Uses context['volume_id']
 
     :param clients: Client manager
@@ -101,7 +106,7 @@ def attach(clients, context, mountpoint='/u01'):
 
     Uses context['server_id']
     Uses context['volume_id']
-    
+
     Sets context['volume_attachment_id']
 
     :param clients: Client manager
@@ -116,7 +121,6 @@ def attach(clients, context, mountpoint='/u01'):
     volume.attach(server_id, mountpoint)
     context['volume_attachment_id'] = volume.id
     context.setdefault('stack', []).append({'volume_attachment_id': volume.id})
-    
 
 
 def detach(clients, context):

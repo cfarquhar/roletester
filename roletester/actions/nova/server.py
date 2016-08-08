@@ -5,7 +5,11 @@ from roletester.log import logging
 logger = logging.getLogger('roletester.actions.nova.server')
 
 
-def create(clients, context, name='nova test instance', flavor=None, image=None):
+def create(clients,
+           context,
+           name='nova test instance',
+           flavor=None,
+           image=None):
     """Creates server with random image and flavor.
 
     Sets context['server_id']
@@ -22,15 +26,15 @@ def create(clients, context, name='nova test instance', flavor=None, image=None)
     :type image: String
     """
     nova = clients.get_nova()
-    if flavor == None:
+    if flavor is None:
         flavor = nova.flavors.list()[0].id
     else:
         flavor = nova.flavors.get(flavor)
-    if image == None:
+    if image is None:
         image = nova.images.get(context['image_id'])
     else:
         image = nova.images.get(image)
-    logger.info(": %s"% image.id)
+    logger.info(": %s" % image.id)
     logger.info("Taking action create")
     meta = {"test-key": "test-value"}
     server = nova.servers.create(name, image, flavor, meta)
@@ -55,11 +59,12 @@ def delete(clients, context):
     logger.info("Deleting {0} ...".format(server_id))
     nova.servers.delete(server_id)
 
+
 def update(clients, context, meta={"test-key": "modified-test-value"}):
     """Update's a server's metadata
-    
+
     Uses context['server_id']
-    
+
     :param clients: Client manager
     :type clients: roletester.clients.ClientManager
     :param meta: new metadata

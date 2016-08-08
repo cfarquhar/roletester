@@ -7,19 +7,12 @@ from roletester.actions.nova import interface_detach
 from roletester.actions.nova import server_create
 from roletester.actions.nova import server_update
 from roletester.actions.nova import server_delete
-from roletester.actions.nova import server_list
 from roletester.actions.nova import server_show
 from roletester.actions.nova import server_create_image
 from roletester.actions.nova import server_wait_for_status
 from roletester.actions.neutron import network_create
-from roletester.actions.neutron import network_delete
 from roletester.actions.neutron import port_create
-from roletester.actions.neutron import port_delete
 from roletester.actions.neutron import subnet_create
-from roletester.actions.neutron import subnet_delete
-from roletester.exc import NovaNotFound
-from roletester.exc import GlanceNotFound
-from roletester.exc import GlanceUnauthorized
 from roletester.exc import KeystoneUnauthorized
 from roletester.scenario import ScenarioFactory as Factory
 from roletester.utils import randomname
@@ -57,13 +50,14 @@ class SampleFactory(Factory):
     SERVER_UPDATE = 5
     SERVER_CREATE_IMAGE = 6
     SERVER_IMAGE_WAIT = 7
-    SERVER_IMAGE_DELETE = 8 
+    SERVER_IMAGE_DELETE = 8
     NETWORK_CREATE = 9
     SUBNET_CREATE = 10
     PORT_CREATE = 11
     INTERFACE_ATTACH = 12
     INTERFACE_DETACH = 13
     SERVER_DELETE = 14
+
 
 class SnapFactory(Factory):
 
@@ -84,7 +78,7 @@ class SnapFactory(Factory):
     SERVER_SHOW = 4
     SERVER_UPDATE = 5
     SERVER_CREATE_IMAGE = 6
-   
+
 
 class NetworkPortFactory(Factory):
 
@@ -109,6 +103,7 @@ class NetworkPortFactory(Factory):
     INTERFACE_DETACH = 8
     SERVER_DELETE = 9
 
+
 class NetworkAttachInterfaceFactory(Factory):
 
     _ACTIONS = [
@@ -130,6 +125,7 @@ class NetworkAttachInterfaceFactory(Factory):
     SUBNET_CREATE = 5
     PORT_CREATE = 6
     INTERFACE_ATTACH = 7
+
 
 class NetworkDetachInterfaceFactory(Factory):
 
@@ -157,6 +153,7 @@ class NetworkDetachInterfaceFactory(Factory):
     INTERFACE_DETACH = 8
     SERVER_DELETE = 9
 
+
 class TestSample(BaseTestCase):
 
     name = 'scratch'
@@ -165,20 +162,24 @@ class TestSample(BaseTestCase):
     project = randomname()
 
     def test_cloud_admin_all_cloud_admin_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, 
-                 clients=creator, 
-                 args=(self.image_file,), 
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(SampleFactory.IMAGE_WAIT, clients=creator) \
-            .set(SampleFactory.SERVER_IMAGE_WAIT, 
-                  clients=creator, 
-                  kwargs=server_image_kwargs) \
-            .set(SampleFactory.SERVER_IMAGE_DELETE, 
+            .set(SampleFactory.SERVER_IMAGE_WAIT,
+                 clients=creator,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE,
                  kwargs=server_image_kwargs) \
             .set(SampleFactory.NETWORK_CREATE, clients=creator) \
             .set(SampleFactory.SUBNET_CREATE, clients=creator) \
@@ -186,68 +187,85 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
 
     def test_cloud_admin_same_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_CREATE, clients=user1) \
             .set(SampleFactory.SERVER_WAIT, clients=user1) \
-            .set(SampleFactory.SERVER_IMAGE_WAIT, 
-                  kwargs=server_image_kwargs) \
-            .set(SampleFactory.SERVER_IMAGE_DELETE, 
+            .set(SampleFactory.SERVER_IMAGE_WAIT,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE,
                  clients=creator,
                  kwargs=server_image_kwargs) \
             .set(SampleFactory.NETWORK_CREATE, clients=creator) \
             .set(SampleFactory.SUBNET_CREATE, clients=creator) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_cloud_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin') #TODO this should work with Domain2
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        # TODO this should work with Domain2
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_CREATE, clients=user1) \
             .set(SampleFactory.SERVER_WAIT, clients=user1) \
-            .set(SampleFactory.SERVER_IMAGE_WAIT, 
-                  kwargs=server_image_kwargs) \
-            .set(SampleFactory.SERVER_IMAGE_DELETE, 
+            .set(SampleFactory.SERVER_IMAGE_WAIT,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE,
                  clients=creator,
                  kwargs=server_image_kwargs) \
             .set(SampleFactory.NETWORK_CREATE, clients=creator) \
             .set(SampleFactory.SUBNET_CREATE, clients=creator) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_bu_admin_all_cloud_admin_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        bu_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(bu_admin) \
-            .set(SampleFactory.IMAGE_CREATE, 
-                 clients=creator, 
-                 args=(self.image_file,), 
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(SampleFactory.IMAGE_WAIT, clients=creator) \
-            .set(SampleFactory.SERVER_IMAGE_WAIT, 
-                  clients=creator, 
-                  kwargs=server_image_kwargs) \
-            .set(SampleFactory.SERVER_IMAGE_DELETE, 
+            .set(SampleFactory.SERVER_IMAGE_WAIT,
+                 clients=creator,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE,
                  kwargs=server_image_kwargs) \
             .set(SampleFactory.NETWORK_CREATE, clients=creator) \
             .set(SampleFactory.SUBNET_CREATE, clients=creator) \
@@ -255,62 +273,79 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
 
     def test_bu_admin_same_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
-        bu_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(bu_admin) \
-            .set(SampleFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_CREATE, clients=user1) \
             .set(SampleFactory.SERVER_WAIT, clients=user1) \
-            .set(SampleFactory.SERVER_IMAGE_WAIT, 
-                  kwargs=server_image_kwargs) \
-            .set(SampleFactory.SERVER_IMAGE_DELETE, 
+            .set(SampleFactory.SERVER_IMAGE_WAIT,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE,
                  clients=creator,
                  kwargs=server_image_kwargs) \
             .set(SampleFactory.NETWORK_CREATE, clients=creator) \
             .set(SampleFactory.SUBNET_CREATE, clients=creator) \
             .produce() \
             .run(context=self.context)
-   
-            
+
     def test_bu_admin_different_domain_different_user_server_and_snapshot(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
-        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin') #TODO this should work with Domain2
-        
-        server_image_kwargs = {'image_key': 'server_image_id'}
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        # TODO this should work with Domain2
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'admin'
+        )
+
         SnapFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(SnapFactory.IMAGE_WAIT, clients=creator) \
             .set(SnapFactory.SERVER_CREATE, clients=user1) \
             .set(SnapFactory.SERVER_WAIT, clients=user1) \
-            .set(SnapFactory.SERVER_SHOW, 
+            .set(SnapFactory.SERVER_SHOW,
                  expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SnapFactory.SERVER_UPDATE, 
+            .set(SnapFactory.SERVER_UPDATE,
                  expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SnapFactory.SERVER_CREATE_IMAGE, 
+            .set(SnapFactory.SERVER_CREATE_IMAGE,
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
-           
+
     def test_bu_admin_different_domain_different_user_network(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
-        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin') #TODO this should work with Domain2
-        
-        server_image_kwargs = {'image_key': 'server_image_id'}
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        # TODO this should work with Domain2
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'admin'
+        )
+
         NetworkPortFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(NetworkPortFactory.IMAGE_WAIT, clients=creator) \
@@ -322,15 +357,22 @@ class TestSample(BaseTestCase):
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
+
     def test_bu_admin_different_domain_different_user_attach_interface(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
-        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin') #TODO this should work with Domain2
-        
-        server_image_kwargs = {'image_key': 'server_image_id'}
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'admin'
+        )
+        # TODO this should work with Domain2
+
         NetworkAttachInterfaceFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(NetworkAttachInterfaceFactory.IMAGE_WAIT, clients=creator) \
@@ -344,16 +386,22 @@ class TestSample(BaseTestCase):
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_bu_admin_different_domain_different_user_detach_interface(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        user1 = self.km.find_user_credentials('Default', self.project, '_member_')
-        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin') #TODO this should work with Domain2
-        
-        server_image_kwargs = {'image_key': 'server_image_id'}
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'admin'
+        )
+        # TODO this should work with Domain2
+
         NetworkDetachInterfaceFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(NetworkDetachInterfaceFactory.IMAGE_WAIT, clients=creator) \
@@ -371,6 +419,3 @@ class TestSample(BaseTestCase):
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
-       
-            
-            

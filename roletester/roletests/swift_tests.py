@@ -1,13 +1,10 @@
 from base import Base as BaseTestCase
 from roletester.actions.swift import swift_container_create
 from roletester.actions.swift import swift_container_delete
-from roletester.actions.swift import swift_container_get
 from roletester.actions.swift import swift_container_add_metadata
-from roletester.actions.swift import swift_container_delete_metadata
 from roletester.actions.swift import swift_object_put
 from roletester.actions.swift import swift_object_delete
 from roletester.actions.swift import swift_object_get
-from roletester.exc import KeystoneUnauthorized
 from roletester.exc import SwiftClientException
 from roletester.scenario import ScenarioFactory as Factory
 from roletester.utils import randomname
@@ -27,8 +24,6 @@ class SampleFactory(Factory):
         swift_object_get,
         swift_object_delete,
         swift_container_delete
-        
-
     ]
 
     SWIFT_CONTAINER_CREATE = 0
@@ -37,42 +32,49 @@ class SampleFactory(Factory):
     SWIFT_OBJECT_GET = 3
     SWIFT_OBJECT_DELETE = 4
     SWIFT_CONTAINER_DELETE = 5
-    
-    
+
+
 class TestSample(BaseTestCase):
 
     project = randomname()
-    
-
 
     def test_cloud_admin_all(self):
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
         SampleFactory(cloud_admin) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_cloud_admin_different_domain(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin') #TODO: Should pass with with Domain2
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        # TODO: Should pass with with Domain2
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.SWIFT_CONTAINER_CREATE, 
+            .set(SampleFactory.SWIFT_CONTAINER_CREATE,
                  clients=creator) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_bu_admin_all(self):
-        bu_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
         SampleFactory(bu_admin) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_different_domain(self):
-        creator = self.km.find_user_credentials('Default', self.project, 'admin')
-        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'admin'
+        )
         SampleFactory(bu_admin) \
             .set(SampleFactory.SWIFT_CONTAINER_CREATE,
                  clients=creator) \

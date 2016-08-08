@@ -4,9 +4,6 @@ from roletester.actions.glance import image_show
 from roletester.actions.glance import image_update
 from roletester.actions.glance import image_delete
 from roletester.actions.glance import image_wait_for_status
-from roletester.exc import NovaNotFound
-from roletester.exc import GlanceNotFound
-from roletester.exc import GlanceUnauthorized
 from roletester.exc import KeystoneUnauthorized
 from roletester.scenario import ScenarioFactory as Factory
 from roletester.utils import randomname
@@ -33,61 +30,77 @@ class SampleFactory(Factory):
     IMAGE_UPDATE = 3
     IMAGE_DELETE = 4
 
+
 class TestSample(BaseTestCase):
 
     name = 'scratch'
     flavor = '1'
     image_file = '/Users/chalupaul/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
-    
-
 
     def test_cloud_admin_all(self):
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE,  
+            .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,)) \
             .produce() \
             .run(context=self.context)
-        
+
     def test_cloud_admin_same_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, '_member_')
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,)) \
             .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_cloud_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, '_member_')
-        cloud_admin = self.km.find_user_credentials('Default', self.project, 'admin') #TODO: Should pass with with Domain2
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        # TODO: Should pass with with Domain2
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, 
-                 clients=creator, 
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
                  args=(self.image_file,)) \
             .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_bu_admin_all(self):
-        bu_admin = self.km.find_user_credentials('Default', self.project, 'admin')
-        
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'admin'
+        )
+
         SampleFactory(bu_admin) \
-            .set(SampleFactory.IMAGE_CREATE,  
+            .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,)) \
             .produce() \
             .run(context=self.context)
-            
+
     def test_bu_admin_same_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, '_member_')
-        bu_admin = self.km.find_user_credentials('Default', self.project, 'bu_admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu_admin'
+        )
+
         SampleFactory(bu_admin) \
             .set(SampleFactory.IMAGE_CREATE,
                  clients=creator,
@@ -97,9 +110,13 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
 
     def test_bu_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials('Default', self.project, '_member_')
-        bu_admin = self.km.find_user_credentials('Domain2', self.project, 'admin')
-        
+        creator = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'admin'
+        )
+
         SampleFactory(bu_admin) \
             .set(SampleFactory.IMAGE_CREATE,
                  clients=creator,

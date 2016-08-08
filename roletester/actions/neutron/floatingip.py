@@ -41,13 +41,12 @@ def create(clients, context):
     """
     logger.info("Taking action floatingip.create.")
     neutron = clients.get_neutron()
-    networks = neutron.list_networks()['networks']
     floating_network_id = context['external_network_id']
     if 'project_id' in context:
         project_id = context['project_id']
     else:
         project_id = None
-    
+
     body = {
         "floatingip": {
             "floating_network_id": floating_network_id
