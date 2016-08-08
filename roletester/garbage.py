@@ -2,6 +2,7 @@ from log import logging
 
 from exc import CinderNotFound
 from exc import GlanceNotFound
+from exc import KeystoneNotFound
 from exc import NeutronNotFound
 from exc import NovaNotFound
 
@@ -86,6 +87,7 @@ class Collector(object):
                 scenario.run(context=resource_dict)
             except (CinderNotFound,
                     GlanceNotFound,
+                    KeystoneNotFound,
                     NeutronNotFound,
                     NovaNotFound):
                 logger.debug("{}:{} Was not found.".format(key, resource_id))
