@@ -8,6 +8,7 @@ from clients import ClientManager
 from string import ascii_letters, digits
 
 
+
 class KeystoneManager(object):
     """
     Class for ensuring role assignments in keystone.
