@@ -51,6 +51,7 @@ class KeystoneManager(object):
             'OS_PROJECT_NAME': 'admin',
             'OS_AUTH_URL': 'http://127.0.0.1:5000/v3',
             'OS_USER_DOMAIN_NAME': 'Default',
+            'OS_DOMAIN_ID': 'Default',
             'OS_PROJECT_DOMAIN_NAME': 'Default'}
         self.env_vars = {
             k[3:].lower(): os.getenv(k, v)

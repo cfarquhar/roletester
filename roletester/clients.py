@@ -47,12 +47,14 @@ class ClientManager(object):
             revoke_key = revoke_keys[scope]
 
         if self._scope[scope]['session'] is None:
+            print "SESSION IS NONE FOR %s" % scope
             scoped_kwargs = { x: self.auth_kwargs[x]
                               for x in self.auth_kwargs
-                              if x is not revoke_key }
+                              if x != revoke_key }
             self._scope[scope]['kwargs'] = scoped_kwargs
         auth = v3.Password(**scoped_kwargs)
         self._scope[scope]['session'] = session.Session(auth=auth)
+        print "BEHOLD! %s" % self._scope[scope]['kwargs']
         return self._scope[scope]['session']
 
     def get_nova(self, version='2.1', scope='project'):
