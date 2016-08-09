@@ -283,7 +283,7 @@ class KeystoneManager(object):
         :returns: keystoneclient.v3.domains.Domain
         """
 
-        ks = self.admin_client_manager.get_keystone(scope='project') # used like, everywhere
+        ks = self.admin_client_manager.get_keystone() # used like, everywhere
 
         # clarity
         resources = self.ks_attr(keystone_resource_type)

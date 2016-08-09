@@ -22,8 +22,6 @@ class ClientManager(object):
         :param password: String openstack password
         :param project_id: String project_id - Tenant uuid
         """
-        self.project_session = None
-        self.domain_session = None
         self.neutron = None
         self.nova = None
         self.glance = None
@@ -31,6 +29,10 @@ class ClientManager(object):
         self.swift = None
         self.keystone = None
         self.auth_kwargs = auth_kwargs
+        self._scope = {'project': {'kwargs': {},
+                                          'session': None},
+                              'domain': {'kwargs': {},
+                                         'session': None}}
 
     def get_session(self, scope='project'):
         """Get a keystone auth session.
@@ -38,25 +40,20 @@ class ClientManager(object):
         :param scope: Sets the scope you get back from Session.
         :returns: keystoneauth1.session.Session
         """
-        return_session = None
-        if scope == 'project':
-            if self.project_session is None:
-                # loader = loading.get_plugin_loader('password')
-                # auth = loader.load_from_options(**self.auth_kwargs)
-                auth = v3.Password(**self.auth_kwargs)
-                self.project_session = session.Session(auth=auth)
-            return_session = self.project_session
-        elif scope == 'domain':
-            if self.domain_session is None:
-                scoped_kwargs = {x: y 
-                                 for x,y in self.auth_kwargs.items()
-                                 if x is not 'project_name'}
-                auth = v3.Password(**scoped_kwargs)
-                self.domain_session = session.Session(auth)
-            return_session = self.domain_session
-        else:
+        revoke_keys = {'project': 'domain_id', 'domain': 'project_name'}
+        if scope not in revoke_keys:
             raise ValueError("scope must be either `domain` or `project`.")
-        return return_session
+        else:
+            revoke_key = revoke_keys[scope]
+
+        if self._scope[scope]['session'] is None:
+            scoped_kwargs = { x: self.auth_kwargs[x]
+                              for x in self.auth_kwargs
+                              if x is not revoke_key }
+            self._scope[scope]['kwargs'] = scoped_kwargs
+            auth = v3.Password(**scoped_kwargs)
+        self._scope[scope]['session'] = session.Session(auth=auth)
+        return self._scope[scope]['session']
 
     def get_nova(self, version='2.1', scope='project'):
         """Get a nova client instance.
