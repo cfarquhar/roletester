@@ -51,7 +51,7 @@ class ClientManager(object):
                               for x in self.auth_kwargs
                               if x is not revoke_key }
             self._scope[scope]['kwargs'] = scoped_kwargs
-            auth = v3.Password(**scoped_kwargs)
+        auth = v3.Password(**scoped_kwargs)
         self._scope[scope]['session'] = session.Session(auth=auth)
         return self._scope[scope]['session']
 
