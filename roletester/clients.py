@@ -22,7 +22,8 @@ class ClientManager(object):
         :param password: String openstack password
         :param project_id: String project_id - Tenant uuid
         """
-        self.session = None
+        self.project_session = None
+        self.domain_session = None
         self.neutron = None
         self.nova = None
         self.glance = None
@@ -31,58 +32,76 @@ class ClientManager(object):
         self.keystone = None
         self.auth_kwargs = auth_kwargs
 
-    def get_session(self):
+    def get_session(self, scope='project'):
         """Get a keystone auth session.
 
+        :param scope: Sets the scope you get back from Session.
         :returns: keystoneauth1.session.Session
         """
-        if self.session is None:
-            # loader = loading.get_plugin_loader('password')
-            # auth = loader.load_from_options(**self.auth_kwargs)
-            auth = v3.Password(**self.auth_kwargs)
-            self.session = session.Session(auth=auth)
-        return self.session
+        return_session = None
+        if scope == 'project':
+            if self.project_session is None:
+                # loader = loading.get_plugin_loader('password')
+                # auth = loader.load_from_options(**self.auth_kwargs)
+                auth = v3.Password(**self.auth_kwargs)
+                self.project_session = session.Session(auth=auth)
+            return_session = self.project_session
+        elif scope == 'domain':
+            if self.domain_session is None:
+                scoped_kwargs = {x: y 
+                                 for x,y in self.auth_kwargs.items()
+                                 if x is not 'project_name'}
+                auth = v3.Password(**scoped_kwargs)
+                self.domain_session = session.Session(auth)
+            return_session = self.domain_session
+        else:
+            raise ValueError("scope must be either `domain` or `project`.")
+        return return_session
 
-    def get_nova(self, version='2.1'):
+    def get_nova(self, version='2.1', scope='project'):
         """Get a nova client instance.
 
         :param version: String api version
         :returns: novaclient.client.Client
         """
         if self.nova is None:
-            self.nova = novaclient.Client(version, session=self.get_session())
+            sess = self.get_session(scope=scope)
+            self.nova = novaclient.Client(version, session=sess)
         return self.nova
 
-    def get_neutron(self, version='2'):
+    def get_neutron(self, version='2', scope='project'):
         """Get a neutron client instance.
 
         :param version: String api version
         :returns: neutronclient.v2_0.client.Client
         """
         if self.neutron is None:
-            self.neutron = neutronclient.Client(session=self.get_session())
+            sess = self.get_session(scope=scope)
+            self.neutron = neutronclient.Client(session=sess)
         return self.neutron
 
-    def get_glance(self, version='2'):
+    def get_glance(self, version='2', scope='project'):
         """Get a glance client instance.
 
         :param version: String api version
         :return: glanceclient.Client
         """
         if self.glance is None:
-            self.glance = glanceclient(version, session=self.get_session())
+            sess = self.get_session(scope=scope)
+            self.glance = glanceclient(version, session=sess)
         return self.glance
 
-    def get_cinder(self, version='2'):
+    def get_cinder(self, version='2', scope='project'):
         """Get a cinder client instance.
 
         :param version: String api version
         :return: cinderclient.client.Client
         """
         if self.cinder is None:
+            sess = self.get_session(scope=scope)
             iface = os.getenv('OS_ENDPOINT_TYPE', "public")
             self.cinder = cinderclient.Client(version,
-                                              session=self.get_session(),
+                                              session=sess,
                                               interface=iface)
         return self.cinder
 
@@ -101,9 +120,10 @@ class ClientManager(object):
             )
         return self.swift
 
-    def get_keystone(self, version='3'):
+    def get_keystone(self, version='3', scope='domain'):
         """Get a keystone client instance.
 
+        :param scope: You *probably* want a domain scope, but can override.
         :param version: String api version
         :return: keystoneClient.Client
         """
@@ -111,6 +131,6 @@ class ClientManager(object):
             iface = os.getenv('OS_ENDPOINT_TYPE', "public")
             self.keystone = keystoneclient.Client(
                 version=version,
-                session=self.get_session(),
+                session=self.get_session(scope=scope),
                 interface=iface)
         return self.keystone

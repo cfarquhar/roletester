@@ -106,7 +106,7 @@ class KeystoneManager(object):
     def find_user_credentials(self,
         domain='default',
         project='default',
-        role='member'):
+        role='_member_'):
         """
         Finds a user that matches your auth needs, creating one if necessary.
 
@@ -254,7 +254,8 @@ class KeystoneManager(object):
         :returns: string
         """
         (cipher, iv) = self._get_cypher()
-        return cipher.decrypt(hash.decode('hex'))[len(iv):].split('|')
+        decrypted = cipher.decrypt(hash.decode('hex'))[len(iv):].split('|')
+        return [None if x is 'None' else x for x in decrypted]
 
     def _entity_exists(self, keystone_type, name):
         """
@@ -282,7 +283,7 @@ class KeystoneManager(object):
         :returns: keystoneclient.v3.domains.Domain
         """
 
-        ks = self.admin_client_manager.get_keystone() # used like, everywhere
+        ks = self.admin_client_manager.get_keystone(scope='project') # used like, everywhere
 
         # clarity
         resources = self.ks_attr(keystone_resource_type)
